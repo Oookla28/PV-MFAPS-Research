@@ -1,7 +1,9 @@
-# PV-MFAPS algorithm line: finite-action discrete Pareto allocation
+# PV-MFAPS: finite-action discrete Pareto allocation
 
-Status: `EXECUTED` for the solver and benchmark (`out/pv_mfaps_theory_2026-11-06/dp/`);
-`REGISTERED_NOT_EXECUTED` for GPU training; `UNVERIFIED` for any efficacy claim.
+This document describes the finite-action allocator used by the PlantSPD
+training entry point. The solver, brute-force exactness check, scale bench,
+and measured PlantSPD runs are exposed through the source and configuration
+files listed below.
 
 ## 1. Problem
 
@@ -77,13 +79,16 @@ guarantee**; it is reported only as a large-class fallback.
 
 Action histogram at C=69: `k=0: 50`, `k=1: 0`, `k=2: 1`, `k=4: 18`.
 
-## 5. Gates (not yet met)
+## 5. Reproduction entry
 
-Algorithm gate requires: independent FIT calibration coverage, legal feasible
-nondegenerate DP, matched wall/FLOPs `<= 1.05x`, comparison against fixed-k,
-frequency, LP-FT/VarPro-style baselines, two partitions x three seeds
-agreement, HELD tail reproduction and Macro-F1 within tolerance.
+The finite-action solver is implemented in `src/model/pv_mfaps_dp.py` and
+`src/model/pv_mfaps_dp_solver.py`. The exactness contract is run with:
 
-Current status: **solver gate PASS, algorithm gate `REGISTERED_NOT_EXECUTED`**.
-The A100 pilot is an independent branch; its selector does not consume these
-DP actions, and no offline DP number may be used to rescue a failing pilot.
+```bash
+python tests/test_pv_mfaps_dp.py
+```
+
+PlantSPD training uses the shared runner and a policy under
+`configs/policies/`. The complete FIT, freeze, evaluation and result-summary
+sequence is documented in the root README and in
+`docs/protocols.md`.

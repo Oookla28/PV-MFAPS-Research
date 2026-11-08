@@ -25,7 +25,7 @@
 ## Plugin
 
 - `src/validated_runtime/bs_plugin_runner.py` applies Balanced Softmax consistently to native, reference, solver and Fused correction losses.
-- `docs/plugin_protocol.md` describes its independent arms and shared cost protocol.
+- `docs/plugin_experiment.md` describes the independent arms and shared cost protocol.
 - `configs/plugin/bs_pcfa.yaml` declares the plugin matrix.
 
 ## Evidence directories

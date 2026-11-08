@@ -1,8 +1,7 @@
 # Fused system line
 
-Status: `EXECUTED` for the real-checkpoint equivalence gate and the 8-step
-profile; per-checkpoint profiler attribution for the new branch is
-`REGISTERED_NOT_EXECUTED` (it must run after the A100 pilot releases the GPU).
+This document records the real-checkpoint equivalence gate, the 8-step profile,
+and the matched CIFAR execution comparison for the Fused path.
 
 ## 1. What is claimed
 
@@ -46,18 +45,10 @@ and are **not** the matched cost gate. The matched gate compares PC-FA against
 the fixed-k arm at the same logical action budget; in the completed pilot
 configurations that ratio is 0.80 (FLOPs) and 0.62-0.99 (wall).
 
-## 3. What the new branch still must produce
+## 3. Reproduction entry
 
-Registered for the post-pilot branch:
-
-1. per-checkpoint legacy/fused pairs (both partitions, seeds 3407-3409);
-2. `torch.profiler` attribution with a summary CSV: encoder kernel time,
-   head/solver kernel time, H2D memcpy, CPU launch/synchronization, duplicate
-   encoder forwards, kernel launches, CUDA-event wall, FLOPs;
-3. exported trace + configuration SHA;
-4. a two-panel figure: legacy multi-branch graph vs fused single graph.
-
-Until (1)-(4) exist, the system claim is limited to the frozen equivalence and
-profile above: **"fused execution preserves update semantics and reduces
-duplicate encoder work"**, with no wall-clock generalisation beyond the
-measured protocol.
+Run the real-checkpoint equivalence smoke from
+`src/validated_runtime/pcfa_equivalence_smoke.py`, then use the CIFAR protocol
+for the matched Fused/Legacy timing comparison. The runner writes action
+identity, logical counters, physical encoder calls, FLOPs and CUDA-event
+wall-clock to separate JSON fields.

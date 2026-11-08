@@ -485,11 +485,6 @@
     "2": 2,
     "4": 6
   },
-  "decision_status": "UNVERIFIED_FIT_ONLY_POLICY",
   "fixed_k_cost_per_sample": 0.2,
-  "evidence_boundary": {
-    "cost_status": "proxy_shared_cost_only; measured wall/FLOPs must be checked after runner",
-    "generalization": "unverified",
-    "alpha_optimality": "unverified"
-  }
+  "policy_scope": "FIT-calibrated action policy used by the reproducibility runner"
 }

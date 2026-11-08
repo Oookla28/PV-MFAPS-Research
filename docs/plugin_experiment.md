@@ -20,5 +20,5 @@ PYTHONPATH=src/validated_runtime python src/validated_runtime/held_eval.py \
   --output "$OUTPUT_ROOT/HELD_EVAL.json"
 ~~~
 
-The plugin results remain separate from the primary PR-PV-MFAPS evidence. The
-plugin registration document records its shared inputs and arm semantics.
+The plugin results remain separate from the primary PR-PV-MFAPS evidence. This
+module records its shared inputs, arm semantics and evaluation entry point.

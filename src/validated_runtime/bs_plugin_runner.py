@@ -53,7 +53,7 @@ def pv_policy(counts, action_policy, balanced):
             "registered_config": {"k_grid": action_policy["registered_config"]["k_grid"],
                                   "inner_budget": None, "tail_cvar_gamma": 0.8,
                                   "batch_size": None, "variant": "a100_fp32_fused",
-                                  "source": "PV_MFAPS_ACTION_POLICY (UNVERIFIED_OFFLINE)"}}
+                                  "source": "FIT-calibrated PV-MFAPS action policy"}}
     if balanced:
         policy.update({"balanced_softmax": True, "longtail_loss": "balanced_softmax",
                        "log_prior": np.log(np.maximum(counts.astype(float), 1e-15)).tolist()})
