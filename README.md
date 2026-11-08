@@ -43,11 +43,11 @@ DATA_ROOT/
 
 第一阶段比较 Raw 与 Log SPD 映射。矩阵函数的局部导数写成
 
-\[
+$$
 D\phi(C)[H]
 =
 U\left(G_\phi(\Lambda)\odot(U^\top H U)\right)U^\top,
-\]
+$$
 
 其中 $C=U\Lambda U^\top$，$G_\phi$ 是 Loewner 差商矩阵。Raw 映射的差商为常数，Log 映射会在小特征值方向放大部分局部谱扰动。研究不把这个局部放大直接等同于总体泛化结论，而是记录 readout residual、encoder feedback error、谱调制和类别支持数，形成可测的反馈风险对象。
 
@@ -64,13 +64,13 @@ docs/mechanism_feedback_risk.md
 
 第二阶段把每个类别的 readout 精度写成有限动作。基本反馈风险代理为
 
-\[
+$$
 r_c(k_c,\alpha_c)
 =
 (1-\alpha_c)^2A_c^2\rho_c^{2k_c}
 +
 \alpha_c^2\frac{\sigma_c^2}{m q_c},
-\]
+$$
 
 其中 $k_c$ 是 readout 内层步数，$\alpha_c$ 是 reference feedback 混合比例，$\rho_c$ 是内层收缩率，$\sigma_c$ 是批次波动尺度，$q_c$ 是类别采样质量，$m$ 是 batch size。
 
@@ -159,13 +159,13 @@ docs/trr_stage10_claims_evidence_audit_20261108.md
 
 阶段切换的条件性 surrogate-risk 界为
 
-\[
+$$
 J(\widehat{k}_{1:T})-J(k^*_{1:T})
 \le
 2\sum_{t,c}\omega_c\epsilon_{t,c}
 +
 \epsilon_{\rm quant},
-\]
+$$
 
 它描述有限动作估计误差、切换成本和量化误差下的动态策略差距，不直接声称测试集收益。
 

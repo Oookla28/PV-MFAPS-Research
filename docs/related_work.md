@@ -50,3 +50,11 @@ article describes disease segmentation under complex backgrounds, viewpoints
 and illumination. The standard long-tail extensions use the public CIFAR-10
 and CIFAR-100 archives with an explicit imbalance-ratio construction. Every
 dataset-specific runner writes a data hash into its manifest.
+
+## Reference anchors
+
+- Cao et al., “Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss,” NeurIPS 2019. This is the LDAM-DRW baseline family.
+- Ren et al., “Balanced Meta-Softmax for Long-Tailed Visual Recognition,” NeurIPS 2020. This is the Balanced Softmax prior-correction family used by the plugin.
+- Menon et al., “Long-tail learning via logit adjustment,” ICLR 2021. This is the LA comparator used in the CIFAR stage experiments.
+- Huang and Van Gool, “A Riemannian Network for SPD Matrix Learning,” AAAI 2017. This provides the SPD manifold-network background.
+- The PlantSeg source is the Scientific Data article linked in README.md and should be cited by DOI in any downstream document.
