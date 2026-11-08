@@ -6,12 +6,19 @@ The plugin runner shares the checkpoint, backbone, optimizer, steps, batch size,
 
 Run the plugin after the core chain has its own output directory.
 
-```bash
-export OUTPUT_ROOT=$REPO_ROOT/artifacts/results/run_plugin
-bash scripts/run_plugin.sh
-export RUN_DIR=$OUTPUT_ROOT/plugin
-bash scripts/freeze.sh
-SPLIT=held bash scripts/evaluate.sh
-```
+~~~bash
+export DATA_ROOT=/path/to/plantspd-data
+export OUTPUT_ROOT=/path/to/output/plugin
+PYTHONPATH=src/validated_runtime python src/validated_runtime/bs_plugin_runner.py \
+  --root "$DATA_ROOT" --out "$OUTPUT_ROOT" \
+  --arms balanced_softmax,bs_fixed_k_matched_B02,bs_pcfa,native_balanced,effective_number,logit_adjustment \
+  --seeds 3407,3408,3409
+PYTHONPATH=src/validated_runtime python src/validated_runtime/make_freeze_manifest.py \
+  --root "$OUTPUT_ROOT" --output "$OUTPUT_ROOT/FIT_FREEZE_MANIFEST.json"
+PYTHONPATH=src/validated_runtime python src/validated_runtime/held_eval.py \
+  --freeze-manifest "$OUTPUT_ROOT/FIT_FREEZE_MANIFEST.json" \
+  --output "$OUTPUT_ROOT/HELD_EVAL.json"
+~~~
 
-The plugin results are read from `artifacts/results/plugin/` and remain separate from the primary PR-PV-MFAPS evidence. The plugin registration document records its shared inputs and arm semantics.
+The plugin results remain separate from the primary PR-PV-MFAPS evidence. The
+plugin registration document records its shared inputs and arm semantics.

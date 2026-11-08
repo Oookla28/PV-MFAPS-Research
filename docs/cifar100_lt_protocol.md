@@ -14,22 +14,26 @@ The runner has two execution variants. `legacy` repeats the backbone forward for
 
 Use the following commands on a CUDA machine.
 
-```bash
-export REPO_ROOT=/path/to/PV-MFAPS-Repro-20261107
+~~~bash
 export DATA_ROOT=/path/to/cifar-cache
-export OUTPUT_ROOT=$REPO_ROOT/artifacts/results/cifar100_lt/ir100_30epoch
+export OUTPUT_ROOT=/path/to/output/cifar100_ir100_fused
+python experiments/cifar100_lt/cifar100_lt_runner.py \
+  --data-root "$DATA_ROOT" --output "$OUTPUT_ROOT" \
+  --arms erm,ldam_drw,logit_adjustment,fixed_k,pv_mfaps \
+  --seeds 3407,3408,3409 --epochs 30 --batch-size 128 \
+  --execution fused --gpu 0
+~~~
 
-bash scripts/cifar100_lt/train_30epoch.sh
-RUN_DIR=$OUTPUT_ROOT bash scripts/cifar100_lt/evaluate.sh
-```
+To measure the execution axis with the same protocol, use a separate output
+folder and set execution to legacy.
 
-To measure the execution axis with the same protocol, run the same matrix with `EXECUTION=legacy` into a separate output directory.
-
-```bash
-export OUTPUT_ROOT=$REPO_ROOT/artifacts/results/cifar100_lt/ir100_30epoch_legacy
-export EXECUTION=legacy
-bash scripts/cifar100_lt/train_30epoch.sh
-RUN_DIR=$OUTPUT_ROOT bash scripts/cifar100_lt/evaluate.sh
-```
+~~~bash
+export OUTPUT_ROOT=/path/to/output/cifar100_ir100_legacy
+python experiments/cifar100_lt/cifar100_lt_runner.py \
+  --data-root "$DATA_ROOT" --output "$OUTPUT_ROOT" \
+  --arms erm,ldam_drw,logit_adjustment,fixed_k,pv_mfaps \
+  --seeds 3407,3408,3409 --epochs 30 --batch-size 128 \
+  --execution legacy --gpu 0
+~~~
 
 The CIFAR extension is a separate benchmark run. Its Fused measurement describes repeated backbone work in this CIFAR runner and does not reuse the PlantSPD timing numbers. Test evaluation was performed after all 30-epoch checkpoints were produced. The final artifacts are under `artifacts/results/cifar100_lt/`, with earlier mismatched Legacy runs retained under explicit invalid-config records.
