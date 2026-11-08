@@ -37,9 +37,9 @@ Jacobian depends on the Loewner matrix $G_\phi$.
 
 Relevant modules:
 
-- src/model/mechanism_synthetic.py
-- src/model/pv_mfaps_risk_envelope.py
-- docs/mechanism_feedback_risk.md
+- `src/model/mechanism_synthetic.py`
+- `src/model/pv_mfaps_risk_envelope.py`
+- `docs/stage_trr_derivation.md`
 
 ## 2. Feedback gap
 

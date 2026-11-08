@@ -414,6 +414,10 @@ PlantSPD 的两分区、三训练 seed 主链把 PR-PV-MFAPS 与 fixed-k 和
 用 effective-number 采样的控制放在同一执行合同下。结果见
 [`plantspd_pr_pv_mfaps_summary.json`](artifacts/results/plantspd_pr_pv_mfaps_summary.json)。
 
+可视化：[`stage_trr_cross_dataset.pdf`](figures/stage_trr_cross_dataset.pdf)
+（跨数据集阶段窗口），[`table_stage_trr_main.tex`](figures/table_stage_trr_main.tex)
+（可直接编译的主表）。
+
 | Arm | HELD Macro-F1 | HELD Tail-10% F1 | wall-clock (s) | FLOPs |
 |---|---:|---:|---:|---:|
 | PR-PV-MFAPS | **0.4841** | **0.2976** | 0.6060 | $1.077\times10^{12}$ |
@@ -472,6 +476,7 @@ F1 提高 3.17 个百分点。六个 partition-seed 配对中的最大 FLOPs 比
 完整等价性和计时摘要见
 [`fused_execution_summary.json`](artifacts/results/fused_execution_summary.json)。
 系统数字描述的是执行图与物理代价，它们与动态干预的精度指标分开使用。
+对应图表：[`fused_system_equivalence.pdf`](figures/fused_system_equivalence.pdf)。
 
 ### 14.5 离散求解器与预算分配
 
@@ -490,7 +495,10 @@ PlantSPD 与 CIFAR 训练结果单独承担。
 - CIFAR-10-LT 30 epoch：Stage-TRR-10 Macro 0.7799，Tail-10% 0.7797；LA Macro 0.7428，Tail-10% 0.7400。
 - CIFAR-100-LT 50 epoch：Macro 差值 +0.46pp，Tail-10% 差值 -0.33pp。
 - PlantSPD PR-PV-MFAPS：Macro 0.4841，Tail-10% 0.2976。
-- Fused real-checkpoint equivalence：physical encoder forward 3→1，最大状态误差约 $5.77\times10^{-6}$。
+- Fused real-checkpoint equivalence（A100 action-space smoke）：physical encoder forward 3→1，最大状态误差约 $5.77\times10^{-6}$。
+- Fused real-checkpoint equivalence（CIFAR-100-LT corrected one-step）：state max delta $4.47\times10^{-8}$，见第 14.4 节。
+
+长程边界图：[`stage_trr_horizon_boundary.pdf`](figures/stage_trr_horizon_boundary.pdf)。
 
 这些摘要用于复现核对。原始数据、checkpoint 和大规模 encoder state 需要自行准备。
 

@@ -13,7 +13,12 @@ Included figures:
 - stage_trr_cross_dataset.pdf
 - stage_trr_horizon_boundary.pdf
 - stage_trr_paired_seed_deltas.pdf
-- fused_system_equivalence.pdf
+- fused_system_equivalence.pdf (the real-checkpoint one-step equivalence view: 3 to 1 physical encoder passes)
+
+The fused-system PDF is the one-step execution-graph illustration. The numeric
+30-epoch sequential timing and FLOPs comparison is kept in
+`artifacts/results/fused_execution_summary.json`, so the figure and the
+long-run table are intentionally read together.
 
 The corresponding numerical summaries are in artifacts/results. The training
 and evaluation entry points are in experiments/cifar100_lt and
