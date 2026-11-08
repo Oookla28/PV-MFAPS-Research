@@ -247,6 +247,17 @@ conda activate pv-mfaps-repro
 pip install -r requirements.txt
 ~~~
 
+## 6.1 读者侧脚本入口
+
+仓库提供四个不含私有路径的最小脚本：
+
+- [`scripts/download_cifar100.sh`](scripts/download_cifar100.sh)：下载并解压官方 CIFAR-100 Python archive。
+- [`scripts/run_cifar100_minimal.sh`](scripts/run_cifar100_minimal.sh)：运行预检与 1 epoch、2 batch smoke。
+- [`scripts/run_cifar100_standard_200.sh`](scripts/run_cifar100_standard_200.sh)：运行四个标准基线并在冻结后读取 test split。
+- [`scripts/run_stage_trr_200.sh`](scripts/run_stage_trr_200.sh)：运行同一 ResNet-32 合同下的 Stage-TRR-10。
+
+脚本只使用 `CIFAR_ROOT`、`OUTPUT_ROOT`、`GPU_ID` 和 `SEEDS` 环境变量，不包含服务器地址、账号、token 或个人目录。
+
 ## 6. 合同测试
 
 ~~~bash
