@@ -226,7 +226,7 @@ $$
 | DP 合同测试 | [`tests/test_pv_mfaps_dp.py`](tests/test_pv_mfaps_dp.py) | 检查 DP 离散最优性 |
 | PC-FA 合同测试 | [`tests/test_pcfa_policy_contract.py`](tests/test_pcfa_policy_contract.py) | 检查动作空间和预算 |
 
-更完整的公式与模块说明见 docs/theory_and_module_map.md。
+更完整的公式与模块说明见 [`docs/theory_and_module_map.md`](docs/theory_and_module_map.md)。从 SPD 反馈诊断到 Stage-TRR 的逐步推导见 [`docs/stage_trr_derivation.md`](docs/stage_trr_derivation.md)。
 
 ## 5. 环境
 
@@ -355,6 +355,30 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 7. FTRR 统计门与 gate-off 诊断。
 
 每个消融使用独立输出目录。动作表、训练 seed、batch size、optimizer 和成本口径必须保持可追踪。
+
+## 14. 已整理的读者侧结果
+
+短程跨数据集结果按数据集分别报告：
+
+| 数据集与 horizon | 方法 | Macro recall | Tail-10% recall | 相对 LA 的 Tail 变化 |
+|---|---:|---:|---:|---:|
+| CIFAR-100-LT IR=100，30 epoch | LA | 0.4264 | 0.1273 | — |
+| CIFAR-100-LT IR=100，30 epoch | Stage-TRR-10 | 0.4440 | 0.1820 | +43.0% |
+| CIFAR-10-LT IR=100，30 epoch | LA | 0.7428 | 0.7400 | — |
+| CIFAR-10-LT IR=100，30 epoch | Stage-TRR-10 | 0.7799 | 0.7797 | +5.4% |
+
+这两组相对变化来自不同数据集，分别保留，不合并为一个跨数据集百分比。50 epoch 和 200 epoch 结果用于观察阶段窗口，命令和指标定义见 CIFAR-LT 协议文档。
+
+系统执行轴单独记录：
+
+| 指标 | 来源实验 | 数值 | 口径 |
+|---|---|---:|---|
+| Fused/Legacy 一步等价性 | corrected CIFAR one-step smoke | state max delta $4.47\times10^{-8}$ | loss/action semantics matched, `held_reads=0` |
+| 物理 encoder forward | CIFAR-100-LT 30 epoch，seed 3407 | 2,580 vs 54,180 | Fused vs Legacy，同一动作序列 |
+| FLOPs | CIFAR-100-LT 30 epoch，seed 3407 | $8.72\times10^{10}$ vs $1.83\times10^{12}$ | Fused / Legacy，约 0.048x |
+| wall-clock | CIFAR-100-LT 30 epoch，seed 3407 | 73.175 s vs 316.376 s | 同 GPU 顺序计时，约 4.32x 加速 |
+
+系统数字描述的是执行图与物理代价。它们与动态干预的精度指标分开使用。
 
 ## 14. 参考结果
 
