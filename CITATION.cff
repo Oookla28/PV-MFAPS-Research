@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-title: "PV-MFAPS Research Reproduction Package"
+title: "Feedback Geometry and Stage-Aware Readout Refinement"
 message: "If this package supports your work, please cite the associated research record."
 type: software
 abstract: "A reproducible implementation and evidence archive for feedback-aware finite-action precision allocation on long-tailed SPD representations."
-version: 0.1.0
-date-released: 2026-11-07
+version: 0.2.0
+date-released: 2026-11-08
 license: MIT
