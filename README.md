@@ -1,6 +1,33 @@
-# Feedback Geometry and Stage-Aware Readout Refinement
+# Feedback Geometry for Long-Tailed Learning
+
+*Measuring, allocating, and executing readout correction along the training trajectory.*
+
+> 长尾训练里的关键问题不只在于“类别先验如何修正”。一个表示可以被线性读出，却仍然通过尚未收敛的读出头向 encoder 发送不同的更新信号。
+
+本项目把这个差异定义为 **feedback gap**，再把它连接到三个可复现的技术层：用 Loewner 差商解释谱几何如何调制反向敏感性，用有限动作风险分配决定何时精化读出，用 Fused execution 把逻辑干预压缩成真实可执行的计算图。核心对象不是又一个静态 loss，而是**读出质量如何塑造下一步表征学习**。
 
 这是一个面向读者复现实验的最小研究包。公开内容只包含可运行源码、配置、数据接口、evaluation 入口、必要的结果摘要和理论说明。原始图像、checkpoint、encoder state、服务器信息和内部研究记录均不在仓库中。
+
+## 研究主线
+
+| 层次 | 研究问题 | 具体实现 | 已记录的亮点证据 |
+|---|---|---|---|
+| **Measure** | 当前读出和充分精化读出会给 encoder 多么不同的梯度？ | feedback gap $e_t$、相对风险 $\kappa_t$、Loewner Jacobian | 反馈对象可在 FIT 上逐步、逐类测量 |
+| **Allocate** | 在有限内循环预算下，哪些类别值得精化？ | Stage-TRR-N、风险包络、有限动作 Pareto DP | CIFAR-100-LT 200 epoch 三 seed 下 Macro-F1 为 $0.4221\pm0.0064$ |
+| **Execute** | 动态干预的物理代价能否被压低？ | Legacy/Fused 语义等价与特征复用 | encoder forward 由 3 次降为 1 次，Legacy/Fused wall-clock 比约 4.32× |
+
+### 证据快照
+
+这些数字来自不同的实验合同，分别回答精度、阶段窗口和执行代价问题，不合并成单一排行榜结论。
+
+| 实验合同 | 结果 |
+|---|---|
+| CIFAR-100-LT，IR=100，30 epoch | Stage-TRR-10 的 Tail-10% F1 为 0.1820，Logit Adjustment 为 0.1273，按该合同相对提高 43.0% |
+| CIFAR-10-LT，IR=100，30 epoch | Stage-TRR-10 的 Tail-10% F1 为 0.7797，Logit Adjustment 为 0.7400，按该合同相对提高 5.4% |
+| CIFAR-100-LT，IR=100，200 epoch，3 seeds | Stage-TRR-10 vs 同合同 LA：Macro-F1 $0.4221\pm0.0064$ vs $0.4110\pm0.0036$，Tail-10% $0.2389\pm0.0110$ vs $0.2190\pm0.0147$ |
+| CIFAR-100-LT，30 epoch，Fused vs Legacy | 同一动作序列下 FLOPs 约 $0.048\times$，Legacy/Fused wall-clock 比约 $4.32\times$，encoder forward 2,580 vs 54,180 |
+
+这组结果形成了一个清晰的研究叙事：**先测量反馈失配，再把失配变成阶段动作，最后让动作在物理执行上值得做。**
 
 ## 快速导航
 
@@ -42,10 +69,17 @@ PlantSPD 提供真实场景 SPD 分支，CIFAR-100-LT 和 CIFAR-10-LT 提供标�
 
 ## 1.1 研究亮点
 
-- **反馈机制**：把当前读出与充分精化读出产生的 encoder 梯度差作为可测对象，区分前向边界修正和反向反馈修正。
-- **阶段算法**：Stage-TRR-N 只在预先设定的早期阶段执行 detached readout refinement，随后恢复联合 Logit Adjustment。它改变训练轨迹，不替代 LDAM、Balanced Softmax 或 Logit Adjustment 的静态目标。
-- **系统执行**：Fused 路径复用同一 feature tensor，分别记录逻辑动作、物理 encoder forward、FLOPs 和 wall-clock。
-- **复现入口**：训练、冻结、evaluation、合同测试和数据准备都有独立入口，结果摘要保留数据集、seed、硬件和指标口径。
+这项工作的区别不在于再提出一种类别权重，而在于把长尾训练拆成三个可以单独验证的层次。
+
+- **反馈机制**：把当前读出与充分精化读出产生的 encoder 梯度差作为可测对象。这样可以把“表示里有信息”与“这个信息正在推动正确的表征更新”区分开。
+- **阶段算法**：Stage-TRR-N 只在读出滞后最明显的早期窗口执行 detached readout refinement，随后恢复联合 Logit Adjustment。它干预的是训练轨迹，静态目标仍保持可识别，便于和 LA、Balanced Softmax、LDAM-DRW 做同合同比较。
+- **有限动作决策**：风险包络把偏差衰减、批次波动和内循环成本放进同一个动作表，Pareto DP 在给定离散预算和动作网格下保留可复核的 Pareto frontier，而不是把类别分配写成不可检查的启发式。
+- **系统执行**：Fused 路径复用同一个 feature tensor，保持动作序列与逻辑计数不变，同时单独记录物理 encoder forward、FLOPs 和 wall-clock。算法收益与系统收益因此可以分轴复核。
+- **复现入口**：训练、冻结、evaluation、合同测试和数据准备都有独立入口，结果摘要保留数据集、seed、硬件、来源哈希和指标口径。
+
+### Why this is different
+
+静态长尾方法主要改变先验、margin 或采样分布；通用的双时间尺度方法主要提高内层求解精度。本项目把**类别条件的 encoder feedback gap**作为控制对象，并把它放进阶段策略和有限动作分配中。这个接口解释了为什么同一个读出头可以在前向分类上表现相近，却在后续表征更新上产生不同路径，也解释了为什么精化窗口和执行图需要一起设计。
 
 ## 2. 数据来源
 
