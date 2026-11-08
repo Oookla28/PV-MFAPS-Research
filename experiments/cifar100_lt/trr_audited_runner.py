@@ -210,7 +210,7 @@ def main():
         'stage_policy': ('TRR_all_epochs' if trr_epochs == args.epochs else
                          ('LA_all_epochs' if trr_epochs == 0 else 'TRR_then_joint_LA')),
         'wall_seconds': time.time() - start,
-        'boundary': 'FIT-only; test/HELD never loaded',
+        'boundary': 'FIT-only training artifact; test/HELD is read only by the separate post-freeze evaluator',
     }
     (out_root / f'trr_audited_seed{args.seed}.json').write_text(json.dumps(row, indent=2) + '\n')
     print(json.dumps(row, indent=2))

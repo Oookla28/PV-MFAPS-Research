@@ -8,7 +8,7 @@ sequence. Legacy repeats backbone forward work for active action groups,
 while Fused reuses the feature tensor and performs the correction on the head.
 """
 from __future__ import annotations
-import argparse, json, math, os, pickle, random, time, tarfile, urllib.request
+import argparse, hashlib, json, math, os, pickle, random, time, tarfile, urllib.request
 from pathlib import Path
 from typing import Dict, List
 import numpy as np
@@ -25,6 +25,12 @@ STD=torch.tensor([0.2675,0.2565,0.2761]).view(3,1,1)
 
 def seed_all(seed):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
+
+def sha256_file(path):
+    h=hashlib.sha256()
+    with open(path,'rb') as f:
+        for block in iter(lambda:f.read(1<<20),b''): h.update(block)
+    return h.hexdigest()
 
 def ensure_data(root: Path):
     root.mkdir(parents=True, exist_ok=True)
@@ -212,13 +218,13 @@ def logits_for(model, feats, arm):
         return F.normalize(feats, dim=1) @ F.normalize(model.fc.weight, dim=1).t()
     return model.fc(feats)
 
-def evaluate_loader(model,loader,device,counts,limit_batches=0):
+def evaluate_loader(model,loader,device,counts,limit_batches=0,arm=None):
     model.eval(); total=correct=0; per=[ [0,0,0] for _ in counts]
     with torch.no_grad():
         for bi,(x,y) in enumerate(loader):
             if limit_batches and bi >= limit_batches:
                 break
-            x=x.to(device); y=y.to(device); p=model(x).argmax(1); total+=len(y); correct+=int((p==y).sum())
+            x=x.to(device); y=y.to(device); p=logits_for(model,model.features(x),arm or '').argmax(1); total+=len(y); correct+=int((p==y).sum())
             for c in range(len(counts)):
                 support=(y==c); tp=((p==c)&support); pred=(p==c)
                 per[c][0]+=int(support.sum()); per[c][1]+=int(tp.sum()); per[c][2]+=int(pred.sum())
@@ -299,10 +305,10 @@ def train_one(args,arm,seed,device,data_root,out_root):
         if sched is not None: sched.step()
     if cuda_end: cuda_end.record(); torch.cuda.synchronize(); elapsed=cuda_start.elapsed_time(cuda_end)/1000.0
     else: elapsed=time.perf_counter()-start
-    fit_metrics=evaluate_loader(model,train_eval_loader,device,counts,args.limit_batches)
+    fit_metrics=evaluate_loader(model,train_eval_loader,device,counts,args.limit_batches,arm)
     params=sum(p.numel() for p in model.parameters()); flops=float(len(train_ds)*args.epochs*params*2*(physical_forwards/max(logical_actions,1)))
     out=Path(out_root); out.mkdir(parents=True,exist_ok=True); ckpt=out/f'{arm}_seed{seed}_{args.execution}.pt'; torch.save({'model':model.state_dict(),'counts':counts.tolist(),'arm':arm,'seed':seed,'epochs':args.epochs,'model_depth':args.depth,'model_width':args.width,'augmentation':args.augmentation,'weight_decay':args.weight_decay},ckpt)
-    row={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'class_count':len(counts),'imbalance_construction':'round(500 * IR ** (-class_id / 99))','arm':arm,'seed':seed,'epochs':args.epochs,'batch_size':args.batch_size,'limit_batches':args.limit_batches,'learning_rate':opt_lr,'weight_decay':args.weight_decay,'model_depth':model.model_depth,'model_width':model.model_width,'augmentation':args.augmentation,'schedule':args.schedule,'warmup_epochs':args.warmup_epochs,'milestones':args.milestones,'ldam_switch_epoch':ldam_switch_epoch if arm=='ldam_drw' else None,'ldam_C':args.ldam_C if arm=='ldam_drw' else None,'ldam_beta':args.ldam_beta if arm=='ldam_drw' else None,'ldam_scale':args.ldam_scale if arm=='ldam_drw' else None,'logit_adjustment_tau':args.logit_adjustment_tau if arm=='logit_adjustment' else None,'execution':args.execution,'train_n':len(train_ds),'counts_min':int(counts.min()),'counts_max':int(counts.max()),'test_n':10000,'physical_encoder_forwards':physical_forwards,'logical_actions':logical_actions,'forward_reuse_ratio':physical_forwards/max(logical_actions,1),'wall_seconds':elapsed,'estimated_flops':flops,'fit_metrics':fit_metrics,'checkpoint':str(ckpt),'held_reads':0,'fd_stage_logs':fd_stage_logs,'fd_final_action_hist':{str(v): int((k == v).sum()) for v in sorted(set(k.tolist()))} if arm == 'fd_sdpa' else None,'fd_calib_batches':len(calib_batches) if arm == 'fd_sdpa' else 0}
+    row={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'class_count':len(counts),'imbalance_construction':'round(500 * IR ** (-class_id / 99))','arm':arm,'seed':seed,'epochs':args.epochs,'batch_size':args.batch_size,'limit_batches':args.limit_batches,'learning_rate':opt_lr,'weight_decay':args.weight_decay,'model_depth':model.model_depth,'model_width':model.model_width,'augmentation':args.augmentation,'schedule':args.schedule,'warmup_epochs':args.warmup_epochs,'milestones':args.milestones,'ldam_switch_epoch':ldam_switch_epoch if arm=='ldam_drw' else None,'ldam_C':args.ldam_C if arm=='ldam_drw' else None,'ldam_beta':args.ldam_beta if arm=='ldam_drw' else None,'ldam_scale':args.ldam_scale if arm=='ldam_drw' else None,'logit_adjustment_tau':args.logit_adjustment_tau if arm=='logit_adjustment' else None,'execution':args.execution,'train_n':len(train_ds),'counts_min':int(counts.min()),'counts_max':int(counts.max()),'test_n':10000,'physical_encoder_forwards':physical_forwards,'logical_actions':logical_actions,'forward_reuse_ratio':physical_forwards/max(logical_actions,1),'wall_seconds':elapsed,'estimated_flops':flops,'fit_metrics':fit_metrics,'checkpoint':str(ckpt),'held_reads':0,'code_sha256':sha256_file(__file__),'data_sha256':sha256_file(base/'train'),'held_policy':'FIT-only training; test evaluation performed by evaluate.py after freeze','fd_stage_logs':fd_stage_logs,'fd_final_action_hist':{str(v): int((k == v).sum()) for v in sorted(set(k.tolist()))} if arm == 'fd_sdpa' else None,'fd_calib_batches':len(calib_batches) if arm == 'fd_sdpa' else 0}
     (out/f'{arm}_seed{seed}_{args.execution}.json').write_text(json.dumps(row,ensure_ascii=False,indent=2)+'\n'); return row
 
 def main():

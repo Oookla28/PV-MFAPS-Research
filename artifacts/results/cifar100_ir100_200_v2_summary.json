@@ -9,31 +9,65 @@
     "augmentation": "zero_padding_random_crop_and_horizontal_flip",
     "schedule": "5_epoch_warmup_then_160_180_multistep",
     "batch_size": 128,
-    "seeds": [3407, 3408, 3409],
+    "seeds": [
+      3407,
+      3408,
+      3409
+    ],
     "train_n": 10899,
     "counts_min": 5,
     "counts_max": 500,
-    "held_policy": "freeze_then_single_test_read"
+    "held_policy": "freeze_then_single_test_read",
+    "ldam_evaluation": "classifier-aware normalized LDAM logits; earlier raw-logit evaluation quarantined"
   },
   "matched_results": {
-    "erm": {"top1_mean": 0.3878666667, "macro_f1_mean": 0.3458624825, "tail10_f1_mean": 0.0866910423},
-    "balanced_softmax": {"top1_mean": 0.4258, "macro_f1_mean": 0.4138182364, "tail10_f1_mean": 0.2264369944},
-    "logit_adjustment": {"top1_mean": 0.4249666667, "macro_f1_mean": 0.4117756858, "tail10_f1_mean": 0.2171813861},
-    "ldam_drw": {"top1_mean": 0.3656, "macro_f1_mean": 0.3269306732, "tail10_f1_mean": 0.0542708707},
-    "stage_trr10": {"top1_mean": 0.4342, "macro_f1_mean": 0.4220961095, "tail10_f1_mean": 0.2388733596},
-    "la_control": {"top1_mean": 0.4239666667, "macro_f1_mean": 0.4110387953, "tail10_f1_mean": 0.2189598898}
+    "erm": {
+      "top1_mean": 0.3878666667,
+      "macro_f1_mean": 0.3458624825,
+      "tail10_f1_mean": 0.0866910423
+    },
+    "balanced_softmax": {
+      "top1_mean": 0.4258,
+      "macro_f1_mean": 0.4138182364,
+      "tail10_f1_mean": 0.2264369944
+    },
+    "logit_adjustment": {
+      "top1_mean": 0.4249666667,
+      "macro_f1_mean": 0.4117756858,
+      "tail10_f1_mean": 0.2171813861
+    },
+    "ldam_drw": {
+      "top1_mean": 0.4076666667,
+      "macro_f1_mean": 0.3836714463,
+      "tail10_f1_mean": 0.1509325563
+    },
+    "stage_trr10": {
+      "top1_mean": 0.4342,
+      "macro_f1_mean": 0.4220961095,
+      "tail10_f1_mean": 0.2388733596
+    },
+    "la_control": {
+      "top1_mean": 0.4239666667,
+      "macro_f1_mean": 0.4110387953,
+      "tail10_f1_mean": 0.2189598898
+    }
   },
   "paired_stage_minus_la": {
     "top1_mean": 0.0102333333,
     "macro_f1_mean": 0.0110573142,
     "tail10_f1_mean": 0.0199134699,
     "all_three_seeds_positive": true,
-    "paired_t_p_values": {"top1": 0.1234544215, "macro_f1": 0.1097639249, "tail10_f1": 0.0402996828}
+    "paired_t_p_values": {
+      "top1": 0.1234544215,
+      "macro_f1": 0.1097639249,
+      "tail10_f1": 0.0402996828
+    }
   },
   "evidence_files": {
     "baseline": "artifacts/results/cifar100_standard_200_20261108_v2/baseline_fused/HELD_EVAL.json",
     "stage": "artifacts/results/cifar100_standard_200_20261108_v2/stage_trr10/HELD_EVAL.json",
-    "la_control": "artifacts/results/cifar100_standard_200_20261108_v2/la_control/HELD_EVAL.json"
+    "la_control": "artifacts/results/cifar100_standard_200_20261108_v2/la_control/HELD_EVAL.json",
+    "ldam_drw": "internal rerun: cifar100_standard_200_20261108_v3_ldam/standard_200_v3_ldam/HELD_EVAL.json"
   },
-  "scope_note": "This is a three-seed matched standard matrix. It supports a qualified Stage-TRR comparison under this protocol and does not establish community-wide SOTA."
+  "scope_note": "This is a three-seed matched standard matrix. Stage-TRR and LA control support a qualified comparison under this protocol. LDAM uses a corrected classifier-aware evaluation. The matrix does not establish community-wide SOTA."
 }
