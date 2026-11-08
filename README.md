@@ -246,14 +246,14 @@ export PARTITIONS=0,1
 export TRAINING_SEEDS=3407,3408,3409
 export STEPS=8
 export BATCH_SIZE=8
-python -m src.validated_runtime.pr_pv_mfaps_runner --data-root "$DATA_ROOT" --output "$OUTPUT_ROOT" --action-policy "$ACTION_POLICY" --partitions 0,1 --seeds 3407,3408,3409 --steps 8 --batch-size 8
+PYTHONPATH=src/validated_runtime python src/validated_runtime/pr_pv_mfaps_runner.py --root "$DATA_ROOT" --out "$OUTPUT_ROOT" --action-policy "$ACTION_POLICY" --partitions 0,1 --seeds 3407,3408,3409 --steps 8 --batch-size 8
 ~~~
 
 冻结、FIT evaluation 和 HELD evaluation 使用：
 
 ~~~bash
-python -m src.validated_runtime.make_freeze_manifest --run-dir "$OUTPUT_ROOT" --output "$OUTPUT_ROOT/FIT_FREEZE_MANIFEST.json"
-python -m src.validated_runtime.held_eval --run-dir "$OUTPUT_ROOT" --data-root "$DATA_ROOT" --output "$OUTPUT_ROOT/HELD_EVAL.json"
+PYTHONPATH=src/validated_runtime python src/validated_runtime/make_freeze_manifest.py --root "$OUTPUT_ROOT" --output "$OUTPUT_ROOT/FIT_FREEZE_MANIFEST.json"
+PYTHONPATH=src/validated_runtime python src/validated_runtime/held_eval.py --freeze-manifest "$OUTPUT_ROOT/FIT_FREEZE_MANIFEST.json" --output "$OUTPUT_ROOT/HELD_EVAL.json"
 ~~~
 
 训练阶段必须保持 held_reads=0。只有所有 checkpoint 写入后才能执行 evaluator。
