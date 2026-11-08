@@ -392,6 +392,14 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 这些摘要用于复现核对。原始数据、checkpoint 和大规模 encoder state 需要自行准备。
 
+## 15. 协议说明
+
+- 公开脚本把训练和 evaluation split 分开。训练 JSON 的 `held_reads` 保持为 0，所有 checkpoint 写入后才调用 evaluator。
+- 30/50 epoch 的历史结果使用项目早期的宽浅 CIFAR 模型，200 epoch 矩阵使用 ResNet-32。两套配置分别复现，不把它们混成同一张标准表。
+- Balanced Softmax 与 train-time Logit Adjustment 在 $\tau=1$ 时是同一个 prior-aware objective 的不同写法，因此结果阅读时保留名称但不重复计算算法增益。
+- PaCo、RIDE、MiSLAS 等需要额外对比学习分支、专家路由或两阶段校准的重型方法没有在轻量 runner 中用简化版本替代。需要比较时应接入其完整官方实现和对应训练预算。
+- Fused/Legacy 是执行图消融。算法指标、物理 encoder forwards、FLOPs 和 wall-clock 分列记录。
+
 ## 15. 公开内容边界
 
 公开仓库只保留：
