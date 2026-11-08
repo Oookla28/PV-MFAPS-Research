@@ -126,6 +126,9 @@ def main():
     fit_loader = DataLoader(fit_ds, batch_size=args.batch_size * 2, shuffle=False, num_workers=0)
     cal_loader = DataLoader(cal_ds, batch_size=args.batch_size * 2, shuffle=False, num_workers=0)
 
+    # Match the baseline runner's initialization point after all FIT-only
+    # calibration structures have been created.
+    seed_all(args.seed)
     model = CifarResNet(len(counts), depth=args.depth, width=args.width).to(device)
     prior = torch.as_tensor(counts / counts.sum(), device=device, dtype=torch.float32).log()
     # One outer optimizer matches the audited reference implementation. During

@@ -203,6 +203,15 @@ def loss_for(arm, logits, y, counts, epoch, device, *,
         return F.cross_entropy(logits+logit_adjustment_tau*prior,y)
     return F.cross_entropy(logits,y)
 
+def logits_for(model, feats, arm):
+    """Return logits under the registered classifier semantics."""
+    if arm == 'ldam_drw':
+        # LDAM-DRW's CIFAR reference uses a normalized classifier.  Keeping
+        # the cosine logits separate from the margin loss avoids the collapse
+        # caused by multiplying an unconstrained Linear layer by s=30.
+        return F.normalize(feats, dim=1) @ F.normalize(model.fc.weight, dim=1).t()
+    return model.fc(feats)
+
 def evaluate_loader(model,loader,device,counts,limit_batches=0):
     model.eval(); total=correct=0; per=[ [0,0,0] for _ in counts]
     with torch.no_grad():
@@ -229,6 +238,10 @@ def train_one(args,arm,seed,device,data_root,out_root):
         except StopIteration: break
     if len(counts) != 100:
         raise ValueError(f'CIFAR-100-LT requires 100 classes, got {len(counts)}')
+    # The diagnostic calibration iterator is constructed before the model.
+    # Reset here so every arm and the audited Stage-TRR runner share the same
+    # parameter initialization for a given seed.
+    seed_all(seed)
     model=CifarResNet(len(counts),depth=args.depth,width=args.width).to(device)
     opt_lr=args.ldam_lr if arm=='ldam_drw' and args.ldam_lr is not None else args.lr
     ldam_switch_epoch=(args.ldam_switch_epoch if args.ldam_switch_epoch >= 0
@@ -244,7 +257,7 @@ def train_one(args,arm,seed,device,data_root,out_root):
         for bi,(x,y) in enumerate(loader):
             if args.limit_batches and bi >= args.limit_batches:
                 break
-            x=x.to(device,non_blocking=True); y=y.to(device,non_blocking=True); opt.zero_grad(set_to_none=True); feats=model.features(x); logits=model.fc(feats); physical_forwards+=1; logical_actions+=1; loss=loss_for(arm,logits,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau)
+            x=x.to(device,non_blocking=True); y=y.to(device,non_blocking=True); opt.zero_grad(set_to_none=True); feats=model.features(x); logits=logits_for(model,feats,arm); physical_forwards+=1; logical_actions+=1; loss=loss_for(arm,logits,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau)
             bn_restore={}
             if arm == 'fd_sdpa':
                 aux = model.fc(feats.detach())
@@ -268,14 +281,14 @@ def train_one(args,arm,seed,device,data_root,out_root):
                         model.train()
                         with torch.no_grad():
                             aux_features=model.features(x)
-                        aux=model.fc(aux_features.detach())
+                            aux=logits_for(model,aux_features.detach(),arm)
                         physical_forwards+=1; loss=loss+0.05*loss_for(arm,aux,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau); logical_actions+=1
                 else:
                     # Fused path reuses encoder features for every logical correction group.
                     # The active-group multiplicity must match Legacy exactly; otherwise the
                     # two paths optimize different objectives.  We keep the encoder detached
                     # for the correction head, matching the Legacy no-grad feature probe.
-                    aux=model.fc(feats.detach())
+                    aux=logits_for(model,feats.detach(),arm)
                     aux_loss=loss_for(arm,aux,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau)
                     loss=loss+0.05*active*aux_loss
                     logical_actions+=active
