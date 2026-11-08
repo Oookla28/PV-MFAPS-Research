@@ -40,6 +40,13 @@ python tests/test_pcfa_policy_contract.py
 
 PlantSPD 提供真实场景 SPD 分支，CIFAR-100-LT 和 CIFAR-10-LT 提供标准长尾识别复现入口。
 
+## 1.1 研究亮点
+
+- **反馈机制**：把当前读出与充分精化读出产生的 encoder 梯度差作为可测对象，区分前向边界修正和反向反馈修正。
+- **阶段算法**：Stage-TRR-N 只在预先设定的早期阶段执行 detached readout refinement，随后恢复联合 Logit Adjustment。它改变训练轨迹，不替代 LDAM、Balanced Softmax 或 Logit Adjustment 的静态目标。
+- **系统执行**：Fused 路径复用同一 feature tensor，分别记录逻辑动作、物理 encoder forward、FLOPs 和 wall-clock。
+- **复现入口**：训练、冻结、evaluation、合同测试和数据准备都有独立入口，结果摘要保留数据集、seed、硬件和指标口径。
+
 ## 2. 数据来源
 
 ### PlantSeg 与 PlantSPD
