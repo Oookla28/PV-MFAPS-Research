@@ -1,25 +1,26 @@
-# Release manifest
+# Public release manifest
 
-This release keeps code, small JSON summaries, protocol documents, tests, and
-vector figures. It excludes private data, checkpoints, encoder states, SSH
-configuration, machine-local paths, and raw server logs.
+This repository is the reader-facing minimum reproducible unit.
 
 ## Included
 
-- src/ model, engine, evaluation, and validated runtime modules
-- experiments/cifar100_lt/ CIFAR-LT runners, audited Stage-TRR runners, and
-  offline policy tests
-- scripts/ reproducible entry points
-- configs/ policy and ablation configuration
-- docs/ research timeline, derivations, protocol notes, and claims/evidence
-  records
-- artifacts/results/ selected frozen summaries and audits
-- figures/ scripts, vector PDFs, and LaTeX table
-- paper/aaai_stage_trr_20261108/ AAAI-style LaTeX draft and evidence map
+- Core model, policy, runtime, training, and evaluation modules.
+- CIFAR-LT and PlantSPD entry points.
+- Configuration and action-policy files.
+- DP and PC-FA contract tests.
+- Small result summaries and static figures.
+- Data-source, theory, module, plugin, and reproduction documentation.
+- Citation metadata and license.
 
-## External inputs
+## Excluded
 
-PlantSPD E01 data, CIFAR archives, pretrained weights, checkpoints, and large
-encoder states must be supplied separately through the paths described in
-README.md. Reproduction commands write new outputs under a user-selected
-OUTPUT_ROOT.
+- Research-process journals and internal audit logs.
+- AAAI/LaTeX drafts and evidence maps.
+- GPU orchestration scripts and private shell wrappers.
+- Raw images, checkpoints, encoder states, server paths, SSH information, and
+  credentials.
+
+External data and model states are supplied through the paths documented in
+README.md. The public results are reference summaries. A full rerun produces
+new output directories and new freeze/evaluation manifests.
+
