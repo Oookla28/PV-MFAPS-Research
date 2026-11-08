@@ -53,8 +53,9 @@ dataset-specific runner writes a data hash into its manifest.
 
 ## Reference anchors
 
-- Cao et al., “Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss,” NeurIPS 2019. This is the LDAM-DRW baseline family.
-- Ren et al., “Balanced Meta-Softmax for Long-Tailed Visual Recognition,” NeurIPS 2020. This is the Balanced Softmax prior-correction family used by the plugin.
-- Menon et al., “Long-tail learning via logit adjustment,” ICLR 2021. This is the LA comparator used in the CIFAR stage experiments.
-- Huang and Van Gool, “A Riemannian Network for SPD Matrix Learning,” AAAI 2017. This provides the SPD manifold-network background.
+- [Cao et al., “Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss,” NeurIPS 2019](https://proceedings.neurips.cc/paper/2019/hash/621461af90cadfdaf0e8d4cc25129f91-Abstract.html). This is the LDAM-DRW baseline family.
+- [Ren et al., “Balanced Meta-Softmax for Long-Tailed Visual Recognition,” NeurIPS 2020](https://proceedings.neurips.cc/paper/2020/hash/2ba61cc3a8f44143e1f2f13b2b729ab3-Abstract.html). This is the Balanced Softmax prior-correction family used by the plugin.
+- [Menon et al., “Long-tail learning via logit adjustment,” ICLR 2021](https://openreview.net/forum?id=37nvvqkCo5). This is the train-time LA comparator used in the CIFAR stage experiments.
+- [Kang et al., “Decoupling Representation and Classifier for Long-Tailed Recognition,” ICLR 2020](https://openreview.net/forum?id=r1gRTCVFvB). This is the reference point for two-stage classifier retraining such as cRT and LWS.
+- [Huang and Van Gool, “A Riemannian Network for SPD Matrix Learning,” AAAI 2017](https://ojs.aaai.org/index.php/AAAI/article/view/10334). This provides the SPD manifold-network background.
 - The PlantSeg source is the Scientific Data article linked in README.md and should be cited by DOI in any downstream document.
