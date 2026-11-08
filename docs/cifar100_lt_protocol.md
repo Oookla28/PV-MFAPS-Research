@@ -21,7 +21,7 @@ baseline runner writes FIT-only JSON with `held_reads: 0`. The standard 200-epoc
 separate post-freeze entry point.
 
 The 200-epoch matrix uses the CIFAR ResNet-32 setting (`--depth 32
---width 16`) with zero-padding augmentation. This matches the depth and
+--width 16`) with zero-padding augmentation. LDAM-DRW uses normalized cosine classifier scores during both training and evaluation. This matches the depth and
 width convention used by the public LDAM-DRW reference. The older 30/50-epoch
 summaries used the repository's wider depth-14 model and are retained as a
 separate historical protocol. The new matrix selects five-epoch linear
@@ -109,7 +109,7 @@ python $REPO_ROOT/experiments/cifar100_lt/evaluate.py \
 ```
 
 Before the evaluator runs, all per-arm JSON files should still contain
-`held_reads: 0`. The evaluator records top-1 accuracy, macro recall, macro F1, tail-10% recall, tail-10% F1, wall time and estimated FLOPs for each arm and seed.
+`held_reads: 0`. The evaluator records top-1 accuracy, macro recall, macro F1, tail-10% recall, tail-10% F1, wall time and estimated FLOPs for each arm and seed. The bound summary reports seed IDs, mean, standard deviation, source-code hash, training-data hash and test-data hash.
 
 ## 4. Stage-TRR-10 at the same horizon
 

@@ -17,57 +17,218 @@
     "train_n": 10899,
     "counts_min": 5,
     "counts_max": 500,
-    "held_policy": "freeze_then_single_test_read",
-    "ldam_evaluation": "classifier-aware normalized LDAM logits; earlier raw-logit evaluation quarantined"
+    "held_policy": "freeze_then_single_test_read"
   },
   "matched_results": {
     "erm": {
-      "top1_mean": 0.3878666667,
-      "macro_f1_mean": 0.3458624825,
-      "tail10_f1_mean": 0.0866910423
+      "top1": {
+        "mean": 0.38786666666666664,
+        "std": 0.005415102338214232
+      },
+      "macro_f1": {
+        "mean": 0.3458624824773216,
+        "std": 0.0050804698213685155
+      },
+      "tail10_recall": {
+        "mean": 0.05033333333333334,
+        "std": 0.011503622617824939
+      },
+      "tail10_f1": {
+        "mean": 0.08669104232821052,
+        "std": 0.01603851620860693
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
     },
     "balanced_softmax": {
-      "top1_mean": 0.4258,
-      "macro_f1_mean": 0.4138182364,
-      "tail10_f1_mean": 0.2264369944
+      "top1": {
+        "mean": 0.4258,
+        "std": 0.0034073450074801775
+      },
+      "macro_f1": {
+        "mean": 0.41381823643064436,
+        "std": 0.002536799935950292
+      },
+      "tail10_recall": {
+        "mean": 0.211,
+        "std": 0.015716233645501707
+      },
+      "tail10_f1": {
+        "mean": 0.22643699436578968,
+        "std": 0.01181659703714552
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
     },
-    "logit_adjustment": {
-      "top1_mean": 0.4249666667,
-      "macro_f1_mean": 0.4117756858,
-      "tail10_f1_mean": 0.2171813861
+    "logit_adjustment_baseline": {
+      "top1": {
+        "mean": 0.4249666666666667,
+        "std": 0.007854510381515425
+      },
+      "macro_f1": {
+        "mean": 0.4117756858354049,
+        "std": 0.008164469413202955
+      },
+      "tail10_recall": {
+        "mean": 0.19533333333333336,
+        "std": 0.010503967504392498
+      },
+      "tail10_f1": {
+        "mean": 0.21718138614121552,
+        "std": 0.01196835007353308
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
     },
     "ldam_drw": {
-      "top1_mean": 0.4076666667,
-      "macro_f1_mean": 0.3836714463,
-      "tail10_f1_mean": 0.1509325563
-    },
-    "stage_trr10": {
-      "top1_mean": 0.4342,
-      "macro_f1_mean": 0.4220961095,
-      "tail10_f1_mean": 0.2388733596
+      "top1": {
+        "mean": 0.4076666666666667,
+        "std": 0.006171169527191181
+      },
+      "macro_f1": {
+        "mean": 0.3836714462606933,
+        "std": 0.006559731888880299
+      },
+      "tail10_recall": {
+        "mean": 0.10766666666666667,
+        "std": 0.005131601439446885
+      },
+      "tail10_f1": {
+        "mean": 0.15093255626182153,
+        "std": 0.002781103115809922
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "6ca9f427e8f796625654494b5360b4103fc78fe2fb1367e773e4e05738ace28e"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
     },
     "la_control": {
-      "top1_mean": 0.4239666667,
-      "macro_f1_mean": 0.4110387953,
-      "tail10_f1_mean": 0.2189598898
+      "top1": {
+        "mean": 0.42396666666666666,
+        "std": 0.0034703506066870804
+      },
+      "macro_f1": {
+        "mean": 0.41103879532136806,
+        "std": 0.0036402703007865473
+      },
+      "tail10_recall": {
+        "mean": 0.19533333333333333,
+        "std": 0.01650252505931542
+      },
+      "tail10_f1": {
+        "mean": 0.21895988978226008,
+        "std": 0.014668249135966573
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
+    },
+    "stage_trr10": {
+      "top1": {
+        "mean": 0.4342,
+        "std": 0.006000833275470982
+      },
+      "macro_f1": {
+        "mean": 0.4220961095498991,
+        "std": 0.006440053094070596
+      },
+      "tail10_recall": {
+        "mean": 0.214,
+        "std": 0.008888194417315582
+      },
+      "tail10_f1": {
+        "mean": 0.238873359635432,
+        "std": 0.011044674151142653
+      },
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ],
+      "code_sha256": [
+        "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef"
+      ],
+      "data_sha256": [
+        "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      ],
+      "test_sha256": [
+        "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
+      ]
     }
   },
   "paired_stage_minus_la": {
-    "top1_mean": 0.0102333333,
-    "macro_f1_mean": 0.0110573142,
-    "tail10_f1_mean": 0.0199134699,
-    "all_three_seeds_positive": true,
-    "paired_t_p_values": {
-      "top1": 0.1234544215,
-      "macro_f1": 0.1097639249,
-      "tail10_f1": 0.0402996828
-    }
+    "top1_mean_delta": 0.010233333333333317,
+    "top1_std_delta": 0.0025304826687839012,
+    "macro_f1_mean_delta": 0.011057314228531068,
+    "tail10_f1_mean_delta": 0.01991346985317191,
+    "all_three_seeds_positive": true
   },
-  "evidence_files": {
-    "baseline": "artifacts/results/cifar100_standard_200_20261108_v2/baseline_fused/HELD_EVAL.json",
-    "stage": "artifacts/results/cifar100_standard_200_20261108_v2/stage_trr10/HELD_EVAL.json",
-    "la_control": "artifacts/results/cifar100_standard_200_20261108_v2/la_control/HELD_EVAL.json",
-    "ldam_drw": "internal rerun: cifar100_standard_200_20261108_v3_ldam/standard_200_v3_ldam/HELD_EVAL.json"
+  "source_provenance": {
+    "source_snapshot_sha256": "1cda1cf57dbe170f1166ae0322968fa974f394b11c354416f90f15af507313ef",
+    "current_ldam_runner_sha256": "6ca9f427e8f796625654494b5360b4103fc78fe2fb1367e773e4e05738ace28e",
+    "train_sha256": "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b",
+    "test_sha256": "4b67687d9933c4db8f0831104447f15b93774f4f464bd0516f0f0f2ac83b7864"
   },
-  "scope_note": "This is a three-seed matched standard matrix. Stage-TRR and LA control support a qualified comparison under this protocol. LDAM uses a corrected classifier-aware evaluation. The matrix does not establish community-wide SOTA."
+  "excluded": {
+    "old_v2_raw_ldam": "classifier-aware evaluator mismatch",
+    "old_v2_aggregate": "replaced by provenance-bound aggregate"
+  },
+  "scope_note": "Three-seed matched standard matrix with per-seed mean and standard deviation. It supports a qualified Stage-TRR comparison under this protocol and does not establish community-wide SOTA."
 }

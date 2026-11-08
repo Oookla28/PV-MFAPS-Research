@@ -349,7 +349,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment、LDAM-DRW 和 Stage-TRR-10。Balanced Softmax 与 \(\tau=1\) 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
 
-标准矩阵的读者侧摘要见 [`artifacts/results/cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。Stage-TRR-10 与同合同 LA 控制的三 seed 平均 Macro-F1 为 0.4221 vs 0.4110，Tail-10% F1 为 0.2389 vs 0.2190；三个 seed 的配对差值均为正。该结果用于说明阶段反馈干预在本训练合同下的表现，不能替代跨实现、跨预算的社区排行榜比较。
+标准矩阵的读者侧摘要见 [`artifacts/results/cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。Stage-TRR-10 与同合同 LA 控制的三 seed 平均 Macro-F1 为 0.4221 ± 0.0064 vs 0.4110 ± 0.0036，Tail-10% F1 为 0.2389 ± 0.0110 vs 0.2190 ± 0.0147。三个 seed 的配对差值均为正。摘要同时记录训练集、测试集和源代码快照哈希，旧版 raw-logit LDAM 行被隔离。该结果用于说明阶段反馈干预在本训练合同下的表现，不能替代跨实现、跨预算的社区排行榜比较。
 
 ## 13. 消融设计
 
