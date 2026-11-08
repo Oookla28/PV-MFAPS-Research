@@ -8,8 +8,8 @@
 - [数学对象](#3-数学对象) · [反馈风险](#32-feedback-gap) · [阶段精化](#36-stage-trr-n)
 - [模块地图](#4-模块地图) · [环境](#5-环境) · [合同测试](#6-合同测试)
 - [PlantSPD 主链](#7-plantsdp-主链) · [插件](#8-balanced-softmax-插件)
-- [CIFAR-100-LT](#9-cifar-100-lt-stage-trr-10) · [CIFAR-10-LT](#10-cifar-10-lt-stage-trr-10)
-- [一次性评估](#11-一次性-evaluation) · [消融设计](#12-消融设计) · [参考结果](#13-参考结果)
+- [CIFAR-100-LT](#9-cifar-100-lt-stage-trr-10) · [CIFAR-10-LT](#10-cifar-10-lt-stage-trr-10) · [标准 200 epoch 矩阵](#12-cifar-100-lt-ir100-的-200-epoch-矩阵)
+- [一次性评估](#11-一次性-evaluation) · [消融设计](#13-消融设计) · [参考结果](#14-参考结果)
 
 ## 从零开始的最短路径
 
@@ -325,13 +325,13 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 多个 seed 需要使用同一个 frozen group 目录。评估脚本只在训练结束后读取 evaluation split，并把读取数量写入结果。
 
-## 11. CIFAR-100-LT IR=100 的 200 epoch 矩阵
+## 12. CIFAR-100-LT IR=100 的 200 epoch 矩阵
 
 标准矩阵使用 ResNet-32（16/32/64 channels，每个 stage 五个 block）、zero-padding crop、SGD、5 epoch warmup 和 160/180 epoch 学习率衰减。IR=100 的训练集包含 10,899 张图，计数从 500 递减到 5。命令、参数合同和 Stage-TRR-10 的同 horizon 入口集中在 [`configs/cifar100_lt/ir100_200epoch.yaml`](configs/cifar100_lt/ir100_200epoch.yaml) 与 [`docs/cifar100_lt_protocol.md`](docs/cifar100_lt_protocol.md)。
 
 矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment 和 LDAM-DRW。Balanced Softmax 与 $\tau=1$ 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
 
-## 12. 消融设计
+## 13. 消融设计
 
 建议保持以下消融顺序：
 
@@ -345,7 +345,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 每个消融使用独立输出目录。动作表、训练 seed、batch size、optimizer 和成本口径必须保持可追踪。
 
-## 13. 参考结果
+## 14. 参考结果
 
 公开包中的 JSON 摘要用于检查复现结果的量级：
 
@@ -357,7 +357,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 这些摘要用于复现核对。原始数据、checkpoint 和大规模 encoder state 需要自行准备。
 
-## 14. 公开内容边界
+## 15. 公开内容边界
 
 公开仓库只保留：
 
