@@ -340,7 +340,9 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 标准矩阵使用 ResNet-32（16/32/64 channels，每个 stage 五个 block）、zero-padding crop、SGD、5 epoch warmup 和 160/180 epoch 学习率衰减。IR=100 的训练集包含 10,899 张图，计数从 500 递减到 5。命令、参数合同和 Stage-TRR-10 的同 horizon 入口集中在 [`configs/cifar100_lt/ir100_200epoch.yaml`](configs/cifar100_lt/ir100_200epoch.yaml) 与 [`docs/cifar100_lt_protocol.md`](docs/cifar100_lt_protocol.md)。
 
-矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment 和 LDAM-DRW。Balanced Softmax 与 $\tau=1$ 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
+矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment、LDAM-DRW 和 Stage-TRR-10。Balanced Softmax 与 $\tau=1$ 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
+
+标准矩阵的读者侧摘要见 [`artifacts/results/cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。Stage-TRR-10 与同合同 LA 控制的三 seed 平均 Macro-F1 为 0.4221 vs 0.4110，Tail-10% F1 为 0.2389 vs 0.2190；三个 seed 的配对差值均为正。该结果用于说明阶段反馈干预在本训练合同下的表现，不能替代跨实现、跨预算的社区排行榜比较。
 
 ## 13. 消融设计
 
