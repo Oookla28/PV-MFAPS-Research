@@ -1,0 +1,42 @@
+{
+  "status": "EXECUTED",
+  "dataset": "PlantSPD",
+  "protocol": {
+    "partitions": [0, 1],
+    "training_seeds": [3407, 3408, 3409],
+    "steps": 8,
+    "fit_freeze_before_held": true,
+    "held_reads": 25104,
+    "evaluation": "single post-freeze HELD read"
+  },
+  "matched_results": {
+    "pr_pv_mfaps": {
+      "n": 6,
+      "held_macro_f1": 0.4841,
+      "held_tail10_f1": 0.2976,
+      "wall_seconds": 0.6060,
+      "flops": 1.077e12
+    },
+    "fixed_k_matched_B02": {
+      "n": 6,
+      "held_macro_f1": 0.4553,
+      "held_tail10_f1": 0.2659,
+      "wall_seconds": 0.6626,
+      "flops": 1.257e12
+    },
+    "effective_number": {
+      "n": 6,
+      "held_macro_f1": 0.4760,
+      "held_tail10_f1": 0.2778,
+      "wall_seconds": 0.5628,
+      "flops": 1.077e12
+    }
+  },
+  "pr_minus_fixed_k": {
+    "macro_f1_delta": 0.0288,
+    "tail10_f1_delta": 0.0317,
+    "max_flops_ratio": 0.8889,
+    "max_wall_ratio": 0.9974
+  },
+  "source_note": "Compact reader-side summary of the frozen PlantSPD matched run."
+}

@@ -1,0 +1,18 @@
+{
+  "status": "EXECUTED",
+  "kind": "finite_action_discrete_solver",
+  "exactness": {
+    "brute_force_matches": true,
+    "test_cases": 12,
+    "max_integer_objective_difference": 0.0,
+    "fractional_quantized_difference": 4.440892098500626e-16
+  },
+  "scale_benchmark": {
+    "classes_69_wall_seconds": 0.17,
+    "classes_200_wall_seconds": 0.73,
+    "classes_1000_sparse_active_classes": 150,
+    "classes_1000_status": "OPTIMAL_DISCRETE_QUANTIZED_COST",
+    "classes_69_greedy_relative_gap": 1.8853179356677337e-16
+  },
+  "source_note": "Exactness is for the supplied finite action grid and quantized cost problem."
+}

@@ -1,0 +1,32 @@
+{
+  "status": "EXECUTED",
+  "dataset": "CIFAR-100-LT",
+  "protocol": {
+    "imbalance_ratio": 100,
+    "epochs": 30,
+    "seed": 3407,
+    "same_logical_action_sequence": true,
+    "held_reads": 0
+  },
+  "equivalence": {
+    "state_max_abs_delta": 4.470348358154297e-08,
+    "loss_abs_delta": 2.86102294921875e-06,
+    "physical_encoder_forwards": {
+      "fused": 2580,
+      "legacy": 54180
+    },
+    "logical_actions": {
+      "fused": 54180,
+      "legacy": 54180
+    }
+  },
+  "sequential_timing": {
+    "fused_wall_seconds": 73.174609375,
+    "legacy_wall_seconds": 316.3759375,
+    "legacy_over_fused_wall_ratio": 4.322,
+    "fused_flops": 8.721703656e10,
+    "legacy_flops": 1.83155776776e12,
+    "fused_over_legacy_flops_ratio": 0.0476190476
+  },
+  "source_note": "Fused and Legacy use the same logical actions. The comparison isolates execution-graph reuse."
+}

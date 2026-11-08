@@ -31,8 +31,11 @@
 ## Evidence directories
 
 - `artifacts/results/main_pr_pv_mfaps/` holds the main PR/PV summary, rows, calibration and audit-linked JSON files.
+- `artifacts/results/plantspd_pr_pv_mfaps_summary.json` is the compact reader-facing PlantSPD matched-result table.
 - `artifacts/results/theory/` holds finite-action DP and mechanism materials.
+- `artifacts/results/pv_mfaps_solver_benchmark.json` is the compact finite-action solver benchmark.
 - `artifacts/results/fused_equivalence/` holds real-checkpoint Fused equivalence materials.
+- `artifacts/results/fused_execution_summary.json` is the compact Fused/Legacy timing and equivalence summary.
 - `artifacts/results/plugin/` holds plugin artifacts.
 - `artifacts/results/supplemental_mcnemar/` holds exploratory paired-prediction arrays and summary.
 - `artifacts/results/supplemental_50step_metadata_only/` holds the metadata-only long-horizon supplement.

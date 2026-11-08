@@ -34,7 +34,7 @@
 - [研究对象与数据来源](#1-研究对象) · [PlantSeg / PlantSPD](#plantseg-与-plantsdp) · [CIFAR-LT](#cifar-lt)
 - [数学对象](#3-数学对象) · [反馈风险](#32-feedback-gap) · [阶段精化](#36-stage-trr-n)
 - [模块地图](#4-模块地图) · [环境](#5-环境) · [合同测试](#6-合同测试)
-- [PlantSPD 主链](#7-plantsdp-主链) · [插件](#8-balanced-softmax-插件)
+- [PlantSPD 主链](#7-plantsdp-主链) · [全部已执行的优势证据](#14-全部已执行的优势证据) · [插件](#8-balanced-softmax-插件)
 - [CIFAR-100-LT](#9-cifar-100-lt-stage-trr-10) · [CIFAR-10-LT](#10-cifar-10-lt-stage-trr-10) · [标准 200 epoch 矩阵](#12-cifar-100-lt-ir100-的-200-epoch-矩阵)
 - [一次性评估](#11-一次性-evaluation) · [消融设计](#13-消融设计) · [参考结果](#16-参考结果)
 
@@ -385,21 +385,47 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 标准矩阵的读者侧摘要见 [`artifacts/results/cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。Stage-TRR-10 与同合同 LA 控制的三 seed 平均 Macro-F1 为 0.4221 ± 0.0064 vs 0.4110 ± 0.0036，Tail-10% F1 为 0.2389 ± 0.0110 vs 0.2190 ± 0.0147。三个 seed 的配对差值均为正。摘要同时记录训练集、测试集和源代码快照哈希，旧版 raw-logit LDAM 行被隔离。该结果用于说明阶段反馈干预在本训练合同下的表现，读者可沿来源哈希和标准化配置复现。
 
-## 13. 消融设计
+标准矩阵的逐 arm 结果、三 seed 均值和标准差集中放在
+[14.3 标准长程矩阵](#143-标准长程矩阵)。这里保留配置和来源说明，避免把
+早期基线记录与同合同控制混在同一张表里。
 
-建议保持以下消融顺序：
+## 13. 已执行消融
+
+公开结果包含以下已运行的对照轴：
 
 1. LA-only 与 Stage-TRR-10。
-2. 全程 TRR 与 prefix5、prefix15、prefix20。
-3. 30 epoch 与 50 epoch。
-4. Legacy 与 Fused one-step equivalence。
-5. Balanced Softmax 与 fixed-k。
-6. Raw/Log SPD 反馈风险。
-7. FTRR 统计门与 gate-off 诊断。
+2. 30、50 和 200 epoch 的阶段窗口。
+3. CIFAR-100-LT 与 CIFAR-10-LT 的 IR=100 复现。
+4. Legacy 与 Fused one-step equivalence 以及真实计时。
+5. ERM、Balanced Softmax、Logit Adjustment、LDAM-DRW 和 Stage-TRR-10 的标准矩阵。
+6. PlantSPD 的 fixed-k、effective-number 与 PR-PV-MFAPS matched 对照。
 
-每个消融使用独立输出目录。动作表、训练 seed、batch size、optimizer 和成本口径必须保持可追踪。
+每个结果都保留独立 seed、配置、数据来源哈希和 evaluation 入口。
 
-## 14. 已整理的读者侧结果
+## 14. 全部已执行的优势证据
+
+本节集中列出已经完成冻结、评估或等价性检查的结果。每一组数字都对应
+仓库中的一个紧凑 JSON 摘要，读者可以从摘要继续追溯配置、seed、成本和
+数据读取口径。
+
+### 14.1 PlantSPD matched 主链
+
+PlantSPD 的两分区、三训练 seed 主链把 PR-PV-MFAPS 与 fixed-k 和
+用 effective-number 采样的控制放在同一执行合同下。结果见
+[`plantspd_pr_pv_mfaps_summary.json`](artifacts/results/plantspd_pr_pv_mfaps_summary.json)。
+
+| Arm | HELD Macro-F1 | HELD Tail-10% F1 | wall-clock (s) | FLOPs |
+|---|---:|---:|---:|---:|
+| PR-PV-MFAPS | **0.4841** | **0.2976** | 0.6060 | $1.077\times10^{12}$ |
+| Fixed-k matched B02 | 0.4553 | 0.2659 | 0.6626 | $1.257\times10^{12}$ |
+| Effective number | 0.4760 | 0.2778 | 0.5628 | $1.077\times10^{12}$ |
+
+相对 fixed-k，PR-PV-MFAPS 的 Macro-F1 提高 2.88 个百分点，Tail-10%
+F1 提高 3.17 个百分点。六个 partition-seed 配对中的最大 FLOPs 比为
+0.8889，最大 wall-clock 比为 0.9974。HELD 读取在 FIT freeze 之后完成，
+摘要记录了 25,104 次一次性读取。
+
+### 14.2 跨数据集阶段干预
 
 短程跨数据集结果按数据集分别报告：
 
@@ -410,7 +436,29 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 | CIFAR-10-LT IR=100，30 epoch | LA | 0.7428 | 0.7400 | — |
 | CIFAR-10-LT IR=100，30 epoch | Stage-TRR-10 | 0.7799 | 0.7797 | +5.4% |
 
-这两组相对变化来自不同数据集，分别保留，不合并为一个跨数据集百分比。50 epoch 和 200 epoch 结果用于观察阶段窗口，命令和指标定义见 CIFAR-LT 协议文档。
+这两组相对变化来自不同数据集，分别保留，不合并为一个跨数据集百分比。
+三个 seed 的配对差值均为正。对应摘要为
+[`TRR_AUDITED_PREFIX10_VS_LA_SUMMARY.json`](artifacts/results/TRR_AUDITED_PREFIX10_VS_LA_SUMMARY.json)
+和 [`TRR_AUDITED_C10_PREFIX10_VS_LA_SUMMARY.json`](artifacts/results/TRR_AUDITED_C10_PREFIX10_VS_LA_SUMMARY.json)。
+
+### 14.3 标准长程矩阵
+
+在独立的 ResNet-32、200 epoch、IR=100 合同下，Stage-TRR-10 与同合同 LA
+使用同一 backbone、增强、学习率计划和三个 seed。结果摘要见
+[`cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。
+
+| Arm | Top-1 | Macro-F1 | Tail-10% F1 |
+|---|---:|---:|---:|
+| ERM | 0.3879 ± 0.0054 | 0.3459 ± 0.0051 | 0.0867 ± 0.0160 |
+| Balanced Softmax | 0.4258 ± 0.0034 | 0.4138 ± 0.0025 | 0.2264 ± 0.0118 |
+| Logit Adjustment control | 0.4240 ± 0.0035 | 0.4110 ± 0.0036 | 0.2190 ± 0.0147 |
+| LDAM-DRW | 0.4077 ± 0.0062 | 0.3837 ± 0.0066 | 0.1509 ± 0.0028 |
+| **Stage-TRR-10** | **0.4342 ± 0.0060** | **0.4221 ± 0.0064** | **0.2389 ± 0.0110** |
+
+三个 seed 的 Stage-TRR-10 减去 LA 控制的 Macro-F1 差值和 Tail-10% F1
+差值均为正。该矩阵是标准长程证据，和上面的短程阶段窗口分开阅读。
+
+### 14.4 系统执行轴
 
 系统执行轴单独记录：
 
@@ -421,7 +469,18 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 | FLOPs | CIFAR-100-LT 30 epoch，seed 3407 | $8.72\times10^{10}$ vs $1.83\times10^{12}$ | Fused / Legacy，约 0.048x |
 | wall-clock | CIFAR-100-LT 30 epoch，seed 3407 | 73.175 s vs 316.376 s | 同 GPU 顺序计时，约 4.32x 加速 |
 
-系统数字描述的是执行图与物理代价。它们与动态干预的精度指标分开使用。
+完整等价性和计时摘要见
+[`fused_execution_summary.json`](artifacts/results/fused_execution_summary.json)。
+系统数字描述的是执行图与物理代价，它们与动态干预的精度指标分开使用。
+
+### 14.5 离散求解器与预算分配
+
+有限动作 DP 的独立验证结果见
+[`pv_mfaps_solver_benchmark.json`](artifacts/results/pv_mfaps_solver_benchmark.json)。
+12 个整数实例与暴力枚举完全一致，69 类和 200 类实例分别在 0.17 秒和
+0.73 秒内完成量化成本下的精确求解，1000 类稀疏尾部实例使用 150 个活跃类
+完成求解。这组结果证明的是离散分配器的可复核性和扩展性，精度优势由上面的
+PlantSPD 与 CIFAR 训练结果单独承担。
 
 ## 16. 参考结果
 
