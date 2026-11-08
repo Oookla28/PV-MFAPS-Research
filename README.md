@@ -2,6 +2,35 @@
 
 这是一个面向读者复现实验的最小研究包。公开内容只包含可运行源码、配置、数据接口、evaluation 入口、必要的结果摘要和理论说明。原始图像、checkpoint、encoder state、服务器信息和内部研究记录均不在仓库中。
 
+## 快速导航
+
+- [研究对象与数据来源](#1-研究对象) · [PlantSeg / PlantSPD](#plantseg-与-plantsdp) · [CIFAR-LT](#cifar-lt)
+- [数学对象](#3-数学对象) · [反馈风险](#32-feedback-gap) · [阶段精化](#36-stage-trr-n)
+- [模块地图](#4-模块地图) · [环境](#5-环境) · [合同测试](#6-合同测试)
+- [PlantSPD 主链](#7-plantsdp-主链) · [插件](#8-balanced-softmax-插件)
+- [CIFAR-100-LT](#9-cifar-100-lt-stage-trr-10) · [CIFAR-10-LT](#10-cifar-10-lt-stage-trr-10)
+- [一次性评估](#11-一次性-evaluation) · [消融设计](#12-消融设计) · [参考结果](#13-参考结果)
+
+## 从零开始的最短路径
+
+```bash
+git clone https://github.com/Oookla28/PV-MFAPS-Research.git
+cd PV-MFAPS-Research
+conda env create -f environment.yml
+conda activate pv-mfaps-repro
+pip install -r requirements.txt
+python tests/test_pv_mfaps_dp.py
+python tests/test_pcfa_policy_contract.py
+```
+
+然后准备外部数据目录，按 [PlantSPD 主链](#7-plantsdp-主链) 或
+[CIFAR-LT 入口](#9-cifar-100-lt-stage-trr-10) 运行训练，再按
+[一次性 evaluation](#11-一次性-evaluation) 读取冻结后的 evaluation split。
+
+完整文件索引见 [`docs/file_map.md`](docs/file_map.md)，理论与模块对应关系见
+[`docs/theory_and_module_map.md`](docs/theory_and_module_map.md)，图表重建说明见
+[`figures/README.md`](figures/README.md)。
+
 ## 1. 研究对象
 
 项目包含两个相互衔接的研究模块。
@@ -15,7 +44,7 @@ PlantSPD 提供真实场景 SPD 分支，CIFAR-100-LT 和 CIFAR-10-LT 提供标�
 
 ### PlantSeg 与 PlantSPD
 
-PlantSeg 原始资源面向真实场景植物病害分割，包含复杂背景、视角和光照变化。数据论文为 Wei et al., A Large-Scale In-the-wild Dataset for Plant Disease Segmentation, Scientific Data 13, 205 (2026), DOI 10.1038/s41597-025-06513-4。
+PlantSeg 原始资源面向真实场景植物病害分割，包含复杂背景、视角和光照变化。数据论文为 Wei et al., A Large-Scale In-the-wild Dataset for Plant Disease Segmentation, Scientific Data 13, 205 (2026), [DOI 10.1038/s41597-025-06513-4](https://doi.org/10.1038/s41597-025-06513-4)。
 
 本项目不重新发布 PlantSeg 图像。PlantSPD 是从该场景整理出的多视图 SPD 协方差分类协议，使用 69 个疾病类别，FIT/HELD 为 4,184/1,046，FIT 类计数范围为 5–344。
 
@@ -37,7 +66,7 @@ DATA_ROOT/
 
 CIFAR-10 和 CIFAR-100 使用公开官方数据。代码按 imbalance ratio 100 构造长尾训练集，并为每个数据文件写入组合 SHA256。
 
-- CIFAR-100-LT：100 类，IR=100，30/50 epoch。
+- CIFAR-100-LT：100 类，IR=100，30/50 epoch 历史复现，以及独立的 ResNet-32、200 epoch 标准矩阵配置。
 - CIFAR-10-LT：10 类，IR=100，30 epoch。
 - 训练 seeds：3407、3408、3409。
 
@@ -184,18 +213,18 @@ $$
 
 | 模块 | 入口 | 作用 |
 |---|---|---|
-| SPD 反馈风险 | src/model/mechanism_synthetic.py | 构造谱反馈诊断 |
-| 风险包络 | src/model/pv_mfaps_risk_envelope.py | 组合 bias、稳定性与统计项 |
-| 有限动作 DP | src/model/pv_mfaps_dp.py | 运行离散预算分配 |
-| PC-FA 策略 | src/model/pcfa_policy.py | 参数化长尾动作策略 |
-| Fused 运行时 | src/validated_runtime/pcfa_equivalence_smoke.py | 检查 Legacy/Fused 语义等价 |
-| PlantSPD 训练 | src/validated_runtime/pr_pv_mfaps_runner.py | 运行 PlantSPD 主链 |
-| Balanced Softmax 插件 | src/validated_runtime/bs_plugin_runner.py | 运行插件矩阵 |
-| Stage-TRR | experiments/cifar100_lt/trr_audited_runner.py | CIFAR-100-LT 训练 |
-| CIFAR-10-LT Stage-TRR | experiments/cifar100_lt/trr_audited_cifar10_runner.py | CIFAR-10-LT 训练 |
-| 一次性评估 | experiments/cifar100_lt/trr_audited_evaluate.py | 冻结后读取 evaluation split |
-| DP 合同测试 | tests/test_pv_mfaps_dp.py | 检查 DP 离散最优性 |
-| PC-FA 合同测试 | tests/test_pcfa_policy_contract.py | 检查动作空间和预算 |
+| SPD 反馈风险 | [`src/model/mechanism_synthetic.py`](src/model/mechanism_synthetic.py) | 构造谱反馈诊断 |
+| 风险包络 | [`src/model/pv_mfaps_risk_envelope.py`](src/model/pv_mfaps_risk_envelope.py) | 组合 bias、稳定性与统计项 |
+| 有限动作 DP | [`src/model/pv_mfaps_dp.py`](src/model/pv_mfaps_dp.py) | 运行离散预算分配 |
+| PC-FA 策略 | [`src/model/pcfa_policy.py`](src/model/pcfa_policy.py) | 参数化长尾动作策略 |
+| Fused 运行时 | [`src/validated_runtime/pcfa_equivalence_smoke.py`](src/validated_runtime/pcfa_equivalence_smoke.py) | 检查 Legacy/Fused 语义等价 |
+| PlantSPD 训练 | [`src/validated_runtime/pr_pv_mfaps_runner.py`](src/validated_runtime/pr_pv_mfaps_runner.py) | 运行 PlantSPD 主链 |
+| Balanced Softmax 插件 | [`src/validated_runtime/bs_plugin_runner.py`](src/validated_runtime/bs_plugin_runner.py) | 运行插件矩阵 |
+| Stage-TRR | [`experiments/cifar100_lt/trr_audited_runner.py`](experiments/cifar100_lt/trr_audited_runner.py) | CIFAR-100-LT 训练 |
+| CIFAR-10-LT Stage-TRR | [`experiments/cifar100_lt/trr_audited_cifar10_runner.py`](experiments/cifar100_lt/trr_audited_cifar10_runner.py) | CIFAR-10-LT 训练 |
+| 一次性评估 | [`experiments/cifar100_lt/trr_audited_evaluate.py`](experiments/cifar100_lt/trr_audited_evaluate.py) | 冻结后读取 evaluation split |
+| DP 合同测试 | [`tests/test_pv_mfaps_dp.py`](tests/test_pv_mfaps_dp.py) | 检查 DP 离散最优性 |
+| PC-FA 合同测试 | [`tests/test_pcfa_policy_contract.py`](tests/test_pcfa_policy_contract.py) | 检查动作空间和预算 |
 
 更完整的公式与模块说明见 docs/theory_and_module_map.md。
 
@@ -295,6 +324,12 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 ~~~
 
 多个 seed 需要使用同一个 frozen group 目录。评估脚本只在训练结束后读取 evaluation split，并把读取数量写入结果。
+
+## 11. CIFAR-100-LT IR=100 的 200 epoch 矩阵
+
+标准矩阵使用 ResNet-32（16/32/64 channels，每个 stage 五个 block）、zero-padding crop、SGD、5 epoch warmup 和 160/180 epoch 学习率衰减。IR=100 的训练集包含 10,899 张图，计数从 500 递减到 5。命令、参数合同和 Stage-TRR-10 的同 horizon 入口集中在 [`configs/cifar100_lt/ir100_200epoch.yaml`](configs/cifar100_lt/ir100_200epoch.yaml) 与 [`docs/cifar100_lt_protocol.md`](docs/cifar100_lt_protocol.md)。
+
+矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment 和 LDAM-DRW。Balanced Softmax 与 $\tau=1$ 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
 
 ## 12. 消融设计
 

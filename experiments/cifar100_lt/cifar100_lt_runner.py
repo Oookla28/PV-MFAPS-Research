@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CIFAR-100-LT IR=100 runner with PV-MFAPS, LDAM-DRW and Logit Adjustment.
+"""CIFAR-100-LT IR=100 runner with shared long-tail baselines.
 
 The runner keeps train/test access separate. Training writes checkpoints and
 FIT-style logs only. Test evaluation is performed by evaluate.py after all
@@ -53,13 +53,15 @@ def make_lt_indices(labels, imb_ratio=100, seed=3407):
     return np.asarray(idx,dtype=np.int64),np.asarray(counts,dtype=np.int64)
 
 class CifarLT(Dataset):
-    def __init__(self, images, labels, train, seed=3407): self.images=images; self.labels=labels; self.train=train; self.seed=seed
+    def __init__(self, images, labels, train, seed=3407, augmentation='reflect'):
+        self.images=images; self.labels=labels; self.train=train; self.seed=seed; self.augmentation=augmentation
     def __len__(self): return len(self.labels)
     def __getitem__(self,i):
         x=self.images[i].copy(); y=int(self.labels[i]);
         if self.train:
             if random.random()<0.5: x=x[:,::-1]
-            pad=np.pad(x,((4,4),(4,4),(0,0)),mode='reflect'); a=random.randrange(9); b=random.randrange(9); x=pad[a:a+32,b:b+32]
+            pad_mode='constant' if self.augmentation == 'zero' else 'reflect'
+            pad=np.pad(x,((4,4),(4,4),(0,0)),mode=pad_mode); a=random.randrange(9); b=random.randrange(9); x=pad[a:a+32,b:b+32]
         t=torch.from_numpy(x.copy()).float().permute(2,0,1)/255.0
         return (t-MEAN)/STD, y
 
@@ -70,8 +72,16 @@ class BasicBlock(nn.Module):
     def forward(self,x): return F.relu(self.bn2(self.conv2(F.relu(self.bn1(self.conv1(x)))))+self.short(x))
 
 class CifarResNet(nn.Module):
-    def __init__(self,C=100):
-        super().__init__(); self.stem=nn.Sequential(nn.Conv2d(3,64,3,1,1,bias=False),nn.BatchNorm2d(64),nn.ReLU()); self.layer1=self._layer(64,64,2,1); self.layer2=self._layer(64,128,2,2); self.layer3=self._layer(128,256,2,2); self.pool=nn.AdaptiveAvgPool2d(1); self.fc=nn.Linear(256,C)
+    def __init__(self,C=100,depth=14,width=None):
+        if depth == 32:
+            n, width = 5, 16 if width is None else width
+        elif depth == 14:
+            n, width = 2, 64 if width is None else width
+        else:
+            if (depth - 2) % 6 != 0: raise ValueError('depth must be 14 or 6n+2')
+            n, width = (depth - 2) // 6, 16 if width is None else width
+        super().__init__(); self.model_depth=int(depth); self.model_width=int(width)
+        self.stem=nn.Sequential(nn.Conv2d(3,width,3,1,1,bias=False),nn.BatchNorm2d(width),nn.ReLU()); self.layer1=self._layer(width,width,n,1); self.layer2=self._layer(width,width*2,n,2); self.layer3=self._layer(width*2,width*4,n,2); self.pool=nn.AdaptiveAvgPool2d(1); self.fc=nn.Linear(width*4,C)
     def _layer(self,cin,cout,n,stride):
         xs=[BasicBlock(cin,cout,stride)]+[BasicBlock(cout,cout) for _ in range(n-1)]; return nn.Sequential(*xs)
     def features(self,x): return self.pool(self.layer3(self.layer2(self.layer1(self.stem(x))))).flatten(1)
@@ -81,6 +91,15 @@ class CifarResNet(nn.Module):
 def ldam_margins(counts,C=0.5): return C/(np.maximum(counts,1).astype(np.float64)**0.25)
 def class_weights(counts,beta=0.9999):
     w=(1-beta)/(1-np.power(beta,np.maximum(counts,1))); return torch.tensor(w/w.mean(),dtype=torch.float32)
+
+def set_epoch_lr(opt, base_lr, epoch, schedule, warmup_epochs=5, milestones=(160,180)):
+    if schedule == 'standard_multistep':
+        warm = min(1.0, float(epoch + 1) / max(int(warmup_epochs), 1))
+        decay = 0.1 ** sum(int(epoch) >= int(m) for m in milestones)
+        lr = float(base_lr) * warm * decay
+        for group in opt.param_groups: group['lr'] = lr
+        return lr
+    return float(opt.param_groups[0]['lr'])
 
 def build_actions(counts, mode):
     C=len(counts); tail=np.argsort(counts)[:max(1,int(math.ceil(.2*C)))]
@@ -168,39 +187,64 @@ def fd_sdpa_calibrate(model, calib_batches, counts, previous_k, device, args, ep
         'class_rows': rows, 'held_reads': 0,
     }
 
-def loss_for(arm, logits, y, counts, epoch, device):
+def loss_for(arm, logits, y, counts, epoch, device, *,
+             ldam_switch_epoch=15, ldam_C=0.5, ldam_beta=0.9999,
+             ldam_scale=30.0, logit_adjustment_tau=1.0):
     if arm=='ldam_drw':
-        m=torch.tensor(ldam_margins(counts),device=device,dtype=logits.dtype); z=logits.clone(); z[torch.arange(len(y),device=device),y]-=m[y]
-        w=class_weights(counts).to(device) if epoch>=15 else None
-        return F.cross_entropy(30*z,y,weight=w)
+        m=torch.tensor(ldam_C/(np.maximum(counts,1).astype(np.float64)**0.25),device=device,dtype=logits.dtype)
+        z=logits.clone(); z[torch.arange(len(y),device=device),y]-=m[y]
+        w=class_weights(counts, beta=ldam_beta).to(device) if epoch>=ldam_switch_epoch else None
+        return F.cross_entropy(ldam_scale*z,y,weight=w)
+    if arm=='balanced_softmax':
+        prior=torch.tensor(counts,device=device,dtype=logits.dtype).clamp_min(1).log()
+        return F.cross_entropy(logits+prior,y)
     if arm=='logit_adjustment':
-        prior=torch.tensor(counts/counts.sum(),device=device,dtype=logits.dtype).log(); return F.cross_entropy(logits+1.0*prior,y)
+        prior=torch.tensor(counts/counts.sum(),device=device,dtype=logits.dtype).clamp_min(torch.finfo(logits.dtype).tiny).log()
+        return F.cross_entropy(logits+logit_adjustment_tau*prior,y)
     return F.cross_entropy(logits,y)
 
-def evaluate_loader(model,loader,device,counts):
-    model.eval(); total=correct=0; per=[ [0,0] for _ in counts]
+def evaluate_loader(model,loader,device,counts,limit_batches=0):
+    model.eval(); total=correct=0; per=[ [0,0,0] for _ in counts]
     with torch.no_grad():
-        for x,y in loader:
+        for bi,(x,y) in enumerate(loader):
+            if limit_batches and bi >= limit_batches:
+                break
             x=x.to(device); y=y.to(device); p=model(x).argmax(1); total+=len(y); correct+=int((p==y).sum())
             for c in range(len(counts)):
-                m=(y==c); per[c][0]+=int(m.sum()); per[c][1]+=int(((p==c)&m).sum())
-    recalls=np.array([b/max(a,1) for a,b in per]); tail=np.argsort(counts)[:max(1,int(math.ceil(.1*len(counts))))]
-    return {'accuracy':correct/max(total,1),'macro_recall':float(recalls.mean()),'tail10_recall':float(recalls[tail].mean()),'per_class_recall':recalls.tolist(),'n':total}
+                support=(y==c); tp=((p==c)&support); pred=(p==c)
+                per[c][0]+=int(support.sum()); per[c][1]+=int(tp.sum()); per[c][2]+=int(pred.sum())
+    recalls=np.array([r[1]/max(r[0],1) for r in per],dtype=np.float64)
+    precisions=np.array([r[1]/max(r[2],1) for r in per],dtype=np.float64)
+    f1=2*precisions*recalls/np.maximum(precisions+recalls,1e-12)
+    tail=np.argsort(counts)[:max(1,int(math.ceil(.1*len(counts))))]
+    return {'accuracy':correct/max(total,1),'macro_recall':float(recalls.mean()),
+            'macro_f1':float(f1.mean()),'tail10_recall':float(recalls[tail].mean()),
+            'tail10_f1':float(f1[tail].mean()),'per_class_recall':recalls.tolist(),
+            'per_class_f1':f1.tolist(),'n':total}
 
 def train_one(args,arm,seed,device,data_root,out_root):
-    seed_all(seed); base=ensure_data(Path(data_root)); tr_x,tr_y=read_batch(base/'train'); idx,counts=make_lt_indices(tr_y,args.imbalance_ratio,seed); train_ds=CifarLT(tr_x[idx],tr_y[idx],True,seed); train_eval_ds=CifarLT(tr_x[idx],tr_y[idx],False,seed); gen=torch.Generator().manual_seed(seed); loader=DataLoader(train_ds,batch_size=args.batch_size,shuffle=True,num_workers=0,generator=gen,pin_memory=device.type=='cuda'); train_eval_loader=DataLoader(train_eval_ds,batch_size=args.batch_size*2,shuffle=False,num_workers=0,pin_memory=device.type=='cuda'); calib_batches=[]; calib_iter=iter(train_eval_loader);
+    seed_all(seed); base=ensure_data(Path(data_root)); tr_x,tr_y=read_batch(base/'train'); idx,counts=make_lt_indices(tr_y,args.imbalance_ratio,seed); train_ds=CifarLT(tr_x[idx],tr_y[idx],True,seed,args.augmentation); train_eval_ds=CifarLT(tr_x[idx],tr_y[idx],False,seed,args.augmentation); gen=torch.Generator().manual_seed(seed); loader=DataLoader(train_ds,batch_size=args.batch_size,shuffle=True,num_workers=0,generator=gen,pin_memory=device.type=='cuda'); train_eval_loader=DataLoader(train_eval_ds,batch_size=args.batch_size*2,shuffle=False,num_workers=0,pin_memory=device.type=='cuda'); calib_batches=[]; calib_iter=iter(train_eval_loader);
     for _ in range(int(args.fd_calib_batches)):
         try: calib_batches.append(next(calib_iter))
         except StopIteration: break
-    model=CifarResNet(100).to(device); opt_lr=args.lr*(0.1 if arm=='ldam_drw' else 1.0); opt=torch.optim.SGD(model.parameters(),lr=opt_lr,momentum=.9,weight_decay=5e-4); sched=torch.optim.lr_scheduler.CosineAnnealingLR(opt,args.epochs); k,tail=build_actions(counts,arm); physical_forwards=0; logical_actions=0; fd_stage_logs=[]; start=time.perf_counter(); cuda_start=torch.cuda.Event(enable_timing=True) if device.type=='cuda' else None; cuda_end=torch.cuda.Event(enable_timing=True) if device.type=='cuda' else None
+    if len(counts) != 100:
+        raise ValueError(f'CIFAR-100-LT requires 100 classes, got {len(counts)}')
+    model=CifarResNet(len(counts),depth=args.depth,width=args.width).to(device)
+    opt_lr=args.ldam_lr if arm=='ldam_drw' and args.ldam_lr is not None else args.lr
+    ldam_switch_epoch=(args.ldam_switch_epoch if args.ldam_switch_epoch >= 0
+                       else max(1, args.epochs // 2))
+    opt=torch.optim.SGD(model.parameters(),lr=opt_lr,momentum=.9,weight_decay=args.weight_decay); sched=None if args.schedule=='standard_multistep' else torch.optim.lr_scheduler.CosineAnnealingLR(opt,args.epochs); k,tail=build_actions(counts,arm); physical_forwards=0; logical_actions=0; fd_stage_logs=[]; start=time.perf_counter(); cuda_start=torch.cuda.Event(enable_timing=True) if device.type=='cuda' else None; cuda_end=torch.cuda.Event(enable_timing=True) if device.type=='cuda' else None
     if cuda_start: torch.cuda.synchronize(); cuda_start.record()
     for epoch in range(args.epochs):
+        set_epoch_lr(opt,opt_lr,epoch,args.schedule,args.warmup_epochs,tuple(args.milestones))
         if arm == 'fd_sdpa' and (epoch == 0 or epoch % int(args.fd_recalibrate_every) == 0):
             k, fd_log = fd_sdpa_calibrate(model, calib_batches, counts, k, device, args, epoch)
             fd_stage_logs.append(fd_log); physical_forwards += int(fd_log.get('probe_forwards', 0))
         model.train()
-        for x,y in loader:
-            x=x.to(device,non_blocking=True); y=y.to(device,non_blocking=True); opt.zero_grad(set_to_none=True); feats=model.features(x); logits=model.fc(feats); physical_forwards+=1; logical_actions+=1; loss=loss_for(arm,logits,y,counts,epoch,device)
+        for bi,(x,y) in enumerate(loader):
+            if args.limit_batches and bi >= args.limit_batches:
+                break
+            x=x.to(device,non_blocking=True); y=y.to(device,non_blocking=True); opt.zero_grad(set_to_none=True); feats=model.features(x); logits=model.fc(feats); physical_forwards+=1; logical_actions+=1; loss=loss_for(arm,logits,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau)
             bn_restore={}
             if arm == 'fd_sdpa':
                 aux = model.fc(feats.detach())
@@ -225,34 +269,34 @@ def train_one(args,arm,seed,device,data_root,out_root):
                         with torch.no_grad():
                             aux_features=model.features(x)
                         aux=model.fc(aux_features.detach())
-                        physical_forwards+=1; loss=loss+0.05*loss_for(arm,aux,y,counts,epoch,device); logical_actions+=1
+                        physical_forwards+=1; loss=loss+0.05*loss_for(arm,aux,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau); logical_actions+=1
                 else:
                     # Fused path reuses encoder features for every logical correction group.
                     # The active-group multiplicity must match Legacy exactly; otherwise the
                     # two paths optimize different objectives.  We keep the encoder detached
                     # for the correction head, matching the Legacy no-grad feature probe.
                     aux=model.fc(feats.detach())
-                    aux_loss=loss_for(arm,aux,y,counts,epoch,device)
+                    aux_loss=loss_for(arm,aux,y,counts,epoch,device,ldam_switch_epoch=ldam_switch_epoch,ldam_C=args.ldam_C,ldam_beta=args.ldam_beta,ldam_scale=args.ldam_scale,logit_adjustment_tau=args.logit_adjustment_tau)
                     loss=loss+0.05*active*aux_loss
                     logical_actions+=active
             loss.backward()
             for name,old_buf in bn_restore.items():
                 model.get_buffer(name).copy_(old_buf)
             opt.step()
-        sched.step()
+        if sched is not None: sched.step()
     if cuda_end: cuda_end.record(); torch.cuda.synchronize(); elapsed=cuda_start.elapsed_time(cuda_end)/1000.0
     else: elapsed=time.perf_counter()-start
-    fit_metrics=evaluate_loader(model,train_eval_loader,device,counts)
+    fit_metrics=evaluate_loader(model,train_eval_loader,device,counts,args.limit_batches)
     params=sum(p.numel() for p in model.parameters()); flops=float(len(train_ds)*args.epochs*params*2*(physical_forwards/max(logical_actions,1)))
-    out=Path(out_root); out.mkdir(parents=True,exist_ok=True); ckpt=out/f'{arm}_seed{seed}_{args.execution}.pt'; torch.save({'model':model.state_dict(),'counts':counts.tolist(),'arm':arm,'seed':seed,'epochs':args.epochs},ckpt)
-    row={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'arm':arm,'seed':seed,'epochs':args.epochs,'batch_size':args.batch_size,'learning_rate':opt_lr,'execution':args.execution,'train_n':len(train_ds),'counts_min':int(counts.min()),'counts_max':int(counts.max()),'test_n':10000,'physical_encoder_forwards':physical_forwards,'logical_actions':logical_actions,'forward_reuse_ratio':physical_forwards/max(logical_actions,1),'wall_seconds':elapsed,'estimated_flops':flops,'fit_metrics':fit_metrics,'checkpoint':str(ckpt),'held_reads':0,'fd_stage_logs':fd_stage_logs,'fd_final_action_hist':{str(v): int((k == v).sum()) for v in sorted(set(k.tolist()))} if arm == 'fd_sdpa' else None,'fd_calib_batches':len(calib_batches) if arm == 'fd_sdpa' else 0}
+    out=Path(out_root); out.mkdir(parents=True,exist_ok=True); ckpt=out/f'{arm}_seed{seed}_{args.execution}.pt'; torch.save({'model':model.state_dict(),'counts':counts.tolist(),'arm':arm,'seed':seed,'epochs':args.epochs,'model_depth':args.depth,'model_width':args.width,'augmentation':args.augmentation,'weight_decay':args.weight_decay},ckpt)
+    row={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'class_count':len(counts),'imbalance_construction':'round(500 * IR ** (-class_id / 99))','arm':arm,'seed':seed,'epochs':args.epochs,'batch_size':args.batch_size,'limit_batches':args.limit_batches,'learning_rate':opt_lr,'weight_decay':args.weight_decay,'model_depth':model.model_depth,'model_width':model.model_width,'augmentation':args.augmentation,'schedule':args.schedule,'warmup_epochs':args.warmup_epochs,'milestones':args.milestones,'ldam_switch_epoch':ldam_switch_epoch if arm=='ldam_drw' else None,'ldam_C':args.ldam_C if arm=='ldam_drw' else None,'ldam_beta':args.ldam_beta if arm=='ldam_drw' else None,'ldam_scale':args.ldam_scale if arm=='ldam_drw' else None,'logit_adjustment_tau':args.logit_adjustment_tau if arm=='logit_adjustment' else None,'execution':args.execution,'train_n':len(train_ds),'counts_min':int(counts.min()),'counts_max':int(counts.max()),'test_n':10000,'physical_encoder_forwards':physical_forwards,'logical_actions':logical_actions,'forward_reuse_ratio':physical_forwards/max(logical_actions,1),'wall_seconds':elapsed,'estimated_flops':flops,'fit_metrics':fit_metrics,'checkpoint':str(ckpt),'held_reads':0,'fd_stage_logs':fd_stage_logs,'fd_final_action_hist':{str(v): int((k == v).sum()) for v in sorted(set(k.tolist()))} if arm == 'fd_sdpa' else None,'fd_calib_batches':len(calib_batches) if arm == 'fd_sdpa' else 0}
     (out/f'{arm}_seed{seed}_{args.execution}.json').write_text(json.dumps(row,ensure_ascii=False,indent=2)+'\n'); return row
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('--data-root',required=True); ap.add_argument('--output',required=True); ap.add_argument('--arms',default='erm,ldam_drw,logit_adjustment,fixed_k,pv_mfaps'); ap.add_argument('--seeds',default='3407,3408,3409'); ap.add_argument('--epochs',type=int,default=30); ap.add_argument('--batch-size',type=int,default=128); ap.add_argument('--lr',type=float,default=.1); ap.add_argument('--imbalance-ratio',type=int,default=100); ap.add_argument('--execution',choices=['fused','legacy'],default='fused'); ap.add_argument('--gpu',type=int,default=0); ap.add_argument('--fd_recalibrate_every',type=int,default=2); ap.add_argument('--fd_calib_batches',type=int,default=2); ap.add_argument('--fd_grid',default='0,1'); ap.add_argument('--fd_reference_k',type=int,default=1); ap.add_argument('--fd_inner_lr',type=float,default=0.1); ap.add_argument('--fd_lambda_cost',type=float,default=0.001); ap.add_argument('--fd_lambda_switch',type=float,default=0.001); ap.add_argument('--fd_margin',type=float,default=0.0); args=ap.parse_args(); device=torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu'); arms=[x.strip() for x in args.arms.split(',') if x.strip()]; seeds=[int(x) for x in args.seeds.split(',') if x.strip()]; rows=[]
+    ap=argparse.ArgumentParser(); ap.add_argument('--data-root',required=True); ap.add_argument('--output',required=True); ap.add_argument('--arms',default='erm,ldam_drw,balanced_softmax,logit_adjustment,fixed_k,pv_mfaps'); ap.add_argument('--seeds',default='3407,3408,3409'); ap.add_argument('--epochs',type=int,default=30); ap.add_argument('--batch-size',type=int,default=128); ap.add_argument('--limit-batches',type=int,default=0); ap.add_argument('--lr',type=float,default=.1); ap.add_argument('--ldam-lr',type=float,default=None); ap.add_argument('--ldam-switch-epoch',type=int,default=-1); ap.add_argument('--ldam-C',type=float,default=.5); ap.add_argument('--ldam-beta',type=float,default=.9999); ap.add_argument('--ldam-scale',type=float,default=30.0); ap.add_argument('--logit-adjustment-tau',type=float,default=1.0); ap.add_argument('--weight-decay',type=float,default=5e-4); ap.add_argument('--depth',type=int,default=14); ap.add_argument('--width',type=int,default=None); ap.add_argument('--augmentation',choices=['reflect','zero'],default='reflect'); ap.add_argument('--schedule',choices=['cosine','standard_multistep'],default='cosine'); ap.add_argument('--warmup-epochs',type=int,default=5); ap.add_argument('--milestones',type=int,nargs=2,default=[160,180]); ap.add_argument('--imbalance-ratio',type=int,default=100); ap.add_argument('--execution',choices=['fused','legacy'],default='fused'); ap.add_argument('--gpu',type=int,default=0); ap.add_argument('--fd_recalibrate_every',type=int,default=2); ap.add_argument('--fd_calib_batches',type=int,default=2); ap.add_argument('--fd_grid',default='0,1'); ap.add_argument('--fd_reference_k',type=int,default=1); ap.add_argument('--fd_inner_lr',type=float,default=0.1); ap.add_argument('--fd_lambda_cost',type=float,default=0.001); ap.add_argument('--fd_lambda_switch',type=float,default=0.001); ap.add_argument('--fd_margin',type=float,default=0.0); args=ap.parse_args(); device=torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu'); arms=[x.strip() for x in args.arms.split(',') if x.strip()]; seeds=[int(x) for x in args.seeds.split(',') if x.strip()]; rows=[]
     for arm in arms:
-        if arm not in {'erm','ldam_drw','logit_adjustment','fixed_k','pv_mfaps','fd_sdpa'}: raise SystemExit(f'unknown arm {arm}')
+        if arm not in {'erm','ldam_drw','balanced_softmax','logit_adjustment','fixed_k','pv_mfaps','fd_sdpa'}: raise SystemExit(f'unknown arm {arm}')
         for seed in seeds: rows.append(train_one(args,arm,seed,device,args.data_root,args.output))
-    summary={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'epochs':args.epochs,'execution':args.execution,'device':str(device),'rows':rows,'held_policy':'test was read for per-arm smoke output; for submission-grade comparison run all arms, freeze, then read test once'}
+    summary={'status':'EXECUTED','dataset':'CIFAR100-LT','imbalance_ratio':args.imbalance_ratio,'class_count':100,'epochs':args.epochs,'execution':args.execution,'device':str(device),'rows':rows,'held_policy':'training is FIT-only with held_reads=0; run evaluate.py once after all checkpoints are written'}
     Path(args.output,'CIFAR100_LT_SUMMARY.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n'); print(json.dumps({'status':summary['status'],'rows':len(rows),'device':str(device),'output':args.output}))
 if __name__=='__main__': main()

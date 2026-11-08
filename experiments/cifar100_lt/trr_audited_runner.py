@@ -19,6 +19,15 @@ from torch.utils.data import DataLoader, Subset
 
 from cifar100_lt_runner import CifarLT, CifarResNet, ensure_data, make_lt_indices, read_batch, seed_all
 
+def set_epoch_lr(opt, base_lr, epoch, schedule, warmup_epochs=5, milestones=(160,180)):
+    if schedule == 'standard_multistep':
+        warm = min(1.0, float(epoch + 1) / max(int(warmup_epochs), 1))
+        decay = 0.1 ** sum(int(epoch) >= int(m) for m in milestones)
+        lr = float(base_lr) * warm * decay
+        for group in opt.param_groups: group['lr'] = lr
+        return lr
+    return float(opt.param_groups[0]['lr'])
+
 
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -73,8 +82,15 @@ def main():
     ap.add_argument('--output', required=True)
     ap.add_argument('--epochs', type=int, default=30)
     ap.add_argument('--batch-size', type=int, default=128)
+    ap.add_argument('--depth', type=int, default=14)
+    ap.add_argument('--width', type=int, default=None)
+    ap.add_argument('--augmentation', choices=['reflect','zero'], default='reflect')
     ap.add_argument('--lr-encoder', type=float, default=.1)
     ap.add_argument('--lr-head', type=float, default=.05)
+    ap.add_argument('--weight-decay', type=float, default=5e-4)
+    ap.add_argument('--schedule', choices=['cosine','standard_multistep'], default='cosine')
+    ap.add_argument('--warmup-epochs', type=int, default=5)
+    ap.add_argument('--milestones', type=int, nargs=2, default=[160,180])
     ap.add_argument('--calibration-fraction', type=float, default=.1)
     ap.add_argument('--trr-epochs', type=int, default=-1,
                     help='number of initial epochs using slow-head TRR. '
@@ -102,15 +118,15 @@ def main():
         raw_x, raw_y = full_x[selected], full_y[selected]
     train_pos, cal_pos, cal_counts = calibration_split(raw_y, args.calibration_fraction, args.seed)
     train_idx = train_pos if args.holdout_calibration else np.arange(len(raw_y), dtype=np.int64)
-    train_ds = CifarLT(raw_x[train_idx], raw_y[train_idx], True, args.seed)
-    fit_ds = CifarLT(raw_x[train_idx], raw_y[train_idx], False, args.seed)
-    cal_ds = CifarLT(raw_x[cal_pos], raw_y[cal_pos], False, args.seed)
+    train_ds = CifarLT(raw_x[train_idx], raw_y[train_idx], True, args.seed, args.augmentation)
+    fit_ds = CifarLT(raw_x[train_idx], raw_y[train_idx], False, args.seed, args.augmentation)
+    cal_ds = CifarLT(raw_x[cal_pos], raw_y[cal_pos], False, args.seed, args.augmentation)
     loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0,
                         generator=torch.Generator().manual_seed(args.seed))
     fit_loader = DataLoader(fit_ds, batch_size=args.batch_size * 2, shuffle=False, num_workers=0)
     cal_loader = DataLoader(cal_ds, batch_size=args.batch_size * 2, shuffle=False, num_workers=0)
 
-    model = CifarResNet(len(counts)).to(device)
+    model = CifarResNet(len(counts), depth=args.depth, width=args.width).to(device)
     prior = torch.as_tensor(counts / counts.sum(), device=device, dtype=torch.float32).log()
     # One outer optimizer matches the audited reference implementation. During
     # TRR epochs the live head is updated by an explicit inner step and its
@@ -118,12 +134,13 @@ def main():
     # encoder and head jointly. This avoids silently carrying momentum from a
     # different head-update semantics across the stage boundary.
     opt = torch.optim.SGD(model.parameters(), lr=args.lr_encoder, momentum=.9,
-                          weight_decay=5e-4)
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.epochs)
+                          weight_decay=args.weight_decay)
+    sched = None if args.schedule == 'standard_multistep' else torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.epochs)
     start = time.time()
 
     trr_epochs = args.epochs if args.trr_epochs < 0 else min(args.trr_epochs, args.epochs)
     for epoch in range(args.epochs):
+        set_epoch_lr(opt, args.lr_encoder, epoch, args.schedule, args.warmup_epochs, tuple(args.milestones))
         model.train()
         use_trr = epoch < trr_epochs
         for bi, (x, y) in enumerate(loader):
@@ -151,14 +168,16 @@ def main():
             model.fc.weight.grad = None
             model.fc.bias.grad = None
             opt.step()
-        sched.step()
+        if sched is not None: sched.step()
 
     fit_metrics = evaluate_fit(model, fit_loader, device, counts)
     cal_metrics = evaluate_fit(model, cal_loader, device, counts)
     out_root = Path(args.output); out_root.mkdir(parents=True, exist_ok=True)
     checkpoint = out_root / f'trr_audited_seed{args.seed}.pt'
     torch.save({'model': model.state_dict(), 'counts': counts.tolist(),
-                'seed': args.seed, 'epochs': args.epochs, 'held_reads': 0}, checkpoint)
+                'seed': args.seed, 'epochs': args.epochs, 'held_reads': 0,
+                'model_depth': model.model_depth, 'model_width': model.model_width,
+                'augmentation': args.augmentation}, checkpoint)
     code_files = [Path(__file__), Path(__file__).with_name('cifar100_lt_runner.py')]
     code_sha = hashlib.sha256(b''.join(p.read_bytes() for p in code_files)).hexdigest()
     data_sha = 'synthetic' if args.synthetic else sha256_file(Path(args.data_root) / 'cifar-100-python' / 'train')
@@ -168,7 +187,12 @@ def main():
                 ('stage_trr_then_la' if trr_epochs > 0 else 'logit_adjustment')),
         'seed': args.seed, 'epochs': args.epochs, 'trr_epochs': trr_epochs,
         'batch_size': args.batch_size,
-        'schedule': {'trr_feedback_epochs': list(range(trr_epochs)),
+        'weight_decay': args.weight_decay,
+        'lr_schedule': args.schedule, 'warmup_epochs': args.warmup_epochs,
+        'milestones': args.milestones,
+        'model_depth': model.model_depth, 'model_width': model.model_width,
+        'augmentation': args.augmentation,
+        'stage_schedule': {'trr_feedback_epochs': list(range(trr_epochs)),
                      'la_epochs': list(range(trr_epochs, args.epochs))},
         'held_reads': 0,
         'calibration_split': ('independent_fit_stratified' if args.holdout_calibration

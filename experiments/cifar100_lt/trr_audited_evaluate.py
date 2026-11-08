@@ -11,7 +11,7 @@ from cifar100_lt_runner import CifarLT, CifarResNet, ensure_data, read_batch
 
 def eval_one(model, loader, device, counts):
     model.eval()
-    per = np.zeros((len(counts), 2), dtype=np.float64)
+    per = np.zeros((len(counts), 3), dtype=np.float64)
     with torch.no_grad():
         for x, y in loader:
             x, y = x.to(device), y.to(device)
@@ -20,13 +20,19 @@ def eval_one(model, loader, device, counts):
                 m = y == c
                 per[c, 0] += int(m.sum())
                 per[c, 1] += int(((pred == c) & m).sum())
+                per[c, 2] += int((pred == c).sum())
     rec = per[:, 1] / np.maximum(per[:, 0], 1)
+    prec = per[:, 1] / np.maximum(per[:, 2], 1)
+    f1 = 2 * prec * rec / np.maximum(prec + rec, 1e-12)
     tail = np.argsort(counts)[:max(1, int(np.ceil(.1 * len(counts))))]
     return {
         "accuracy": float(per[:, 1].sum() / max(per[:, 0].sum(), 1)),
         "macro_recall": float(rec.mean()),
+        "macro_f1": float(f1.mean()),
         "tail10_recall": float(rec[tail].mean()),
+        "tail10_f1": float(f1[tail].mean()),
         "per_class_recall": rec.tolist(),
+        "per_class_f1": f1.tolist(),
         "n": int(per[:, 0].sum()),
     }
 
@@ -52,10 +58,10 @@ def main():
         if not checkpoint.exists():
             raise FileNotFoundError(checkpoint)
         state = torch.load(checkpoint, map_location="cpu")
-        model = CifarResNet(len(state["counts"])).to(device)
+        model = CifarResNet(len(state["counts"]), depth=int(state.get('model_depth',14)), width=state.get('model_width')).to(device)
         model.load_state_dict(state["model"])
         loader = DataLoader(
-            CifarLT(test_x, test_y, False, int(row["seed"])),
+            CifarLT(test_x, test_y, False, int(row["seed"]), row.get('augmentation','reflect')),
             batch_size=int(row.get("batch_size", 128)) * 2,
             shuffle=False,
             num_workers=0,
@@ -76,7 +82,9 @@ def main():
             "arm": arm,
             "n": len(rs),
             "held_macro_mean": statistics.fmean(r["held_metrics"]["macro_recall"] for r in rs),
+            "held_macro_f1_mean": statistics.fmean(r["held_metrics"]["macro_f1"] for r in rs),
             "held_tail10_mean": statistics.fmean(r["held_metrics"]["tail10_recall"] for r in rs),
+            "held_tail10_f1_mean": statistics.fmean(r["held_metrics"]["tail10_f1"] for r in rs),
             "held_accuracy_mean": statistics.fmean(r["held_metrics"]["accuracy"] for r in rs),
             "wall_mean": statistics.fmean(r["wall_seconds"] for r in rs),
             "seeds": [r["seed"] for r in rs],
