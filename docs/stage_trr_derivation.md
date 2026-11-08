@@ -10,13 +10,13 @@ CIFAR feature is itself an SPD matrix.
 For a symmetric positive definite matrix
 
 ```math
-C=U\operatorname{diag}(\lambda_1,\ldots,\lambda_d)U^\top,
+C=U\mathrm{diag}(\lambda_1,\ldots,\lambda_d)U^\top,
 ```
 
 a spectral map is
 
 ```math
-\phi(C)=U\operatorname{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
+\phi(C)=U\mathrm{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
 ```
 
 For a symmetric perturbation $H$, its Frechet derivative is
@@ -107,7 +107,7 @@ update a detached copy of the readout,
 
 ```math
 W_t^{(1)}=W_t-\eta_h\nabla_W
-L_{\mathrm{LA}}(\operatorname{stopgrad}(h_t),W_t),
+L_{\mathrm{LA}}(\mathrm{stopgrad}(h_t),W_t),
 ```
 
 copy that refined readout into the live head, and update only the encoder
@@ -115,7 +115,7 @@ through
 
 ```math
 \psi_{t+1}=\psi_t-\eta_\psi\nabla_\psi
-L_{\mathrm{LA}}(h_t,\operatorname{stopgrad}(W_t^{(1)})).
+L_{\mathrm{LA}}(h_t,\mathrm{stopgrad}(W_t^{(1)})).
 ```
 
 After epoch $N$, the runner uses the ordinary joint update

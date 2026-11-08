@@ -4,9 +4,9 @@ This benchmark uses the official CIFAR-100 Python archive. The public
 training split contains 50,000 images, with 500 images per fine-label class.
 For imbalance ratio 100, class `c` receives
 
-\[
-n_c=\operatorname{round}\left(500\,100^{-c/99}\right),\qquad c=0,\ldots,99.
-\]
+```math
+n_c=\mathrm{round}\left(500\,100^{-c/99}\right),\qquad c=0,\ldots,99.
+```
 
 The resulting long-tailed training set has 100 classes, counts from 500 down
 to 5, and 10,899 selected images. The official 10,000-image test split is

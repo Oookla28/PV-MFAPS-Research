@@ -7,22 +7,22 @@ entry point.
 ## 1. SPD spectral map
 
 For a symmetric positive-definite matrix
-\[
-C=U\operatorname{diag}(\lambda_1,\ldots,\lambda_d)U^\top,
-\]
+```math
+C=U\mathrm{diag}(\lambda_1,\ldots,\lambda_d)U^\top,
+```
 a scalar spectral map $\phi$ acts as
-\[
-\phi(C)=U\operatorname{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
-\]
+```math
+\phi(C)=U\mathrm{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
+```
 
 For a symmetric perturbation $H$, its Frechet derivative is
-\[
+```math
 D\phi_C[H]
 =
 U\left(G_\phi(\lambda)\odot(U^\top H U)\right)U^\top,
-\]
+```
 where
-\[
+```math
 (G_\phi)_{ij}
 =
 \begin{cases}
@@ -30,7 +30,7 @@ where
 {\lambda_i-\lambda_j}, & i\ne j,\\[6pt]
 \phi'(\lambda_i), & i=j.
 \end{cases}
-\]
+```
 
 The forward representation depends on $\phi(\lambda)$, while the feedback
 Jacobian depends on the Loewner matrix $G_\phi$.
@@ -46,21 +46,21 @@ Relevant modules:
 Let $z_\psi(x)$ be the representation and $W_t$ the current readout. Let
 $\widetilde W_t$ be a more thoroughly optimized reference response on FIT.
 The encoder feedback gap is
-\[
+```math
 e_t
 =
 \nabla_\psi L(\psi_t,W_t)
 -
 \nabla_\psi L(\psi_t,\widetilde W_t).
-\]
+```
 
 The relative diagnostic is
-\[
+```math
 \kappa_t
 =
 \frac{\lVert e_t\rVert}
 {\lVert\nabla_\psi L(\psi_t,\widetilde W_t)\rVert+\delta}.
-\]
+```
 
 These quantities are measured on FIT batches. They are diagnostics for update
 distortion and are not population generalization constants.
@@ -69,13 +69,13 @@ distortion and are not population generalization constants.
 
 For class $c$, partition $p$, inner readout depth $k$, and reference mixing
 coefficient $\alpha$, the basic proxy is
-\[
+```math
 r_{c,p}(k,\alpha)
 =
 (1-\alpha)^2A_{c,p}^2\rho_{c,p}^{2k}
 +
 \alpha^2\frac{\sigma_{c,p}^2}{m q_c}.
-\]
+```
 
 Here $A_{c,p}$ is a FIT-calibrated residual scale, $\rho_{c,p}$ is a
 readout contraction proxy, $\sigma_{c,p}$ is the batch-variation scale,
@@ -85,23 +85,23 @@ the batch size.
 ## 4. KL partition robustness
 
 For the paired PlantSPD partitions, let $\bar u=(1/2,1/2)$ and define
-\[
+```math
 \mathcal U_\varepsilon
 =
 \{u\in\Delta^2:
-\operatorname{KL}(u\|\bar u)\le\varepsilon\}.
-\]
+\mathrm{KL}(u\|\bar u)\le\varepsilon\}.
+```
 
 For a candidate action $a$,
-\[
+```math
 \mathcal E_c(a)
 =
 \sup_{u\in\mathcal U_\varepsilon}
 \sum_{p=0}^{1}u_p\widehat R_{c,p}(a).
-\]
+```
 
 The KL dual used by the policy code is
-\[
+```math
 \mathcal E_c(a)
 =
 \inf_{\eta>0}
@@ -113,7 +113,7 @@ The KL dual used by the policy code is
 \exp\left(\frac{\widehat R_{c,p}(a)}{\eta}\right)
 \right)
 \right].
-\]
+```
 
 The epsilon sweep changes the ambiguity set while keeping paired class
 frequencies fixed.
@@ -131,21 +131,21 @@ cost of action $a$. With cost quantum $\Delta$, define
 $\bar d_c(a)=\lceil d_c(a)/\Delta\rceil$.
 
 The DP stores nondominated partition-risk vectors:
-\[
+```math
 \mathcal P_0(0)=\{(0,0;\varnothing)\},
-\]
+```
 and
-\[
+```math
 \mathcal P_j(b)
 =
-\operatorname{Pareto}
+\mathrm{Pareto}
 \left(
 \bigcup_{a\in\mathcal A}
 \left\{
 (r_0+R_{j,0}(a),r_1+R_{j,1}(a);\pi\cup\{a\})
 \right\}
 \right).
-\]
+```
 
 The DP is exact for the supplied finite risk table, action grid, and cost
 quantization. It is not a global continuous optimization theorem.
@@ -160,39 +160,39 @@ Relevant modules:
 
 For long-tailed CIFAR experiments, Stage-TRR-$N$ uses one detached readout
 refinement for the first $N$ epochs:
-\[
+```math
 W_t^{(1)}
 =
 W_t-\eta_h\nabla_W L_{\mathrm{LA}}(\psi_t,W_t),
-\]
+```
 followed by
-\[
+```math
 \psi_{t+1}
 =
 \psi_t-
 \eta_\psi
 \nabla_\psi
-L_{\mathrm{LA}}(\psi_t,\operatorname{stopgrad}(W_t^{(1)})).
-\]
+L_{\mathrm{LA}}(\psi_t,\mathrm{stopgrad}(W_t^{(1)})).
+```
 
 After epoch $N$, the standard joint Logit Adjustment objective is used:
-\[
+```math
 (\psi_{t+1},W_{t+1})
 =
 (\psi_t,W_t)
 -
 \eta_t\nabla_{\psi,W}
 L_{\mathrm{LA}}(\psi_t,W_t).
-\]
+```
 
 A conditional finite-action stage bound is
-\[
+```math
 J(\widehat k_{1:T})-J(k^*_{1:T})
 \le
 2\sum_{t,c}\omega_c\epsilon_{t,c}
 +
 \epsilon_{\mathrm{quant}},
-\]
+```
 provided the simultaneous FIT certificate
 $|\widehat U_{t,c}(k)-U_{t,c}(k)|\le\epsilon_{t,c}$ holds.
 

@@ -83,14 +83,14 @@ CIFAR-10 和 CIFAR-100 使用公开官方数据。代码按 imbalance ratio 100 
 
 令
 ```math
-C=U\operatorname{diag}(\lambda_1,\ldots,\lambda_d)U^\top.
+C=U\mathrm{diag}(\lambda_1,\ldots,\lambda_d)U^\top.
 ```
 
 谱函数作用为
 ```math
 \phi(C)
 =
-U\operatorname{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
+U\mathrm{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
 ```
 
 对称扰动 H 的 Frechet 导数为
@@ -152,7 +152,7 @@ A、ρ、σ、n 和 q 都从 FIT 校准得到。稳定性项和 empirical-Bernst
 \mathcal U_\varepsilon
 =
 \{u\in\Delta^2:
-\operatorname{KL}(u\|\bar u)\le\varepsilon\}.
+\mathrm{KL}(u\|\bar u)\le\varepsilon\}.
 ```
 
 动作 a 的鲁棒风险为
@@ -169,7 +169,7 @@ A、ρ、σ、n 和 q 都从 FIT 校准得到。稳定性项和 empirical-Bernst
 ```math
 \mathcal P_j(b)
 =
-\operatorname{Pareto}
+\mathrm{Pareto}
 \left(
 \bigcup_{a\in\mathcal A}
 \left\{
@@ -195,7 +195,7 @@ W_t-\eta_h\nabla_W L_{\mathrm{LA}}(\psi_t,W_t),
 \psi_t-
 \eta_\psi
 \nabla_\psi
-L_{\mathrm{LA}}(\psi_t,\operatorname{stopgrad}(W_t^{(1)})).
+L_{\mathrm{LA}}(\psi_t,\mathrm{stopgrad}(W_t^{(1)})).
 ```
 
 第 N 个 epoch 之后恢复联合 Logit Adjustment：
