@@ -418,5 +418,5 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 - 小型结果摘要、静态图和 LaTeX 表。
 - 面向读者的理论与模块说明。
 
-研究流水账、内部审计过程、阶段注册记录、GPU 编排脚本和 AAAI 初稿保留在独立本地目录，不属于公开最小复现单元。
+研究流水账、内部审计过程、阶段注册记录、GPU 编排脚本保留在独立本地目录，不属于公开最小复现单元。
 
