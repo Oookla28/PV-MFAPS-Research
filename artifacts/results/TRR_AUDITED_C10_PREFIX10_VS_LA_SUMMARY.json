@@ -1,0 +1,62 @@
+{
+  "status": "EXECUTED",
+  "kind": "TRR_AUDITED_CIFAR10_EXPLORATORY_SUMMARY",
+  "dataset": "CIFAR10-LT",
+  "held_reads": 60000,
+  "paired_rows": [
+    {
+      "seed": 3407,
+      "prefix_macro": 0.7765000000000001,
+      "la_macro": 0.7417,
+      "delta_macro": 0.03480000000000005,
+      "prefix_tail10": 0.792,
+      "la_tail10": 0.765,
+      "delta_tail10": 0.027000000000000024
+    },
+    {
+      "seed": 3408,
+      "prefix_macro": 0.7888,
+      "la_macro": 0.7621999999999999,
+      "delta_macro": 0.026600000000000068,
+      "prefix_tail10": 0.789,
+      "la_tail10": 0.765,
+      "delta_tail10": 0.02400000000000002
+    },
+    {
+      "seed": 3409,
+      "prefix_macro": 0.7745,
+      "la_macro": 0.7243999999999999,
+      "delta_macro": 0.05010000000000003,
+      "prefix_tail10": 0.758,
+      "la_tail10": 0.69,
+      "delta_tail10": 0.06800000000000006
+    }
+  ],
+  "mean_std": {
+    "delta_macro": {
+      "mean": 0.037166666666666716,
+      "std": 0.011927419391189903
+    },
+    "delta_tail10": {
+      "mean": 0.039666666666666704,
+      "std": 0.024583192089989745
+    },
+    "prefix_macro": {
+      "mean": 0.7799333333333334,
+      "std": 0.007743599507550269
+    },
+    "la_macro": {
+      "mean": 0.7427666666666666,
+      "std": 0.018922561489749006
+    },
+    "prefix_tail10": {
+      "mean": 0.7796666666666667,
+      "std": 0.01882374387132735
+    },
+    "la_tail10": {
+      "mean": 0.74,
+      "std": 0.043301270189221974
+    }
+  },
+  "claims": "Cross-domain exploratory comparison; no SOTA/generalization claim."
+}

@@ -1,0 +1,61 @@
+{
+  "status": "EXECUTED",
+  "scope": "Exploratory paired post-freeze comparison",
+  "rows": [
+    {
+      "seed": 3407,
+      "prefix_macro": 0.44410000000000005,
+      "la_macro": 0.42530000000000007,
+      "delta_macro": 0.018799999999999983,
+      "prefix_tail10": 0.175,
+      "la_tail10": 0.093,
+      "delta_tail10": 0.08199999999999999
+    },
+    {
+      "seed": 3408,
+      "prefix_macro": 0.4455000000000001,
+      "la_macro": 0.4262,
+      "delta_macro": 0.019300000000000095,
+      "prefix_tail10": 0.183,
+      "la_tail10": 0.131,
+      "delta_tail10": 0.05199999999999999
+    },
+    {
+      "seed": 3409,
+      "prefix_macro": 0.4424,
+      "la_macro": 0.4277,
+      "delta_macro": 0.01469999999999999,
+      "prefix_tail10": 0.188,
+      "la_tail10": 0.158,
+      "delta_tail10": 0.03
+    }
+  ],
+  "mean_std": {
+    "delta_macro": {
+      "mean": 0.017600000000000022,
+      "std": 0.002523885892824826
+    },
+    "delta_tail10": {
+      "mean": 0.05466666666666666,
+      "std": 0.02610236260060252
+    },
+    "prefix_macro": {
+      "mean": 0.44400000000000006,
+      "std": 0.0015524174696260533
+    },
+    "la_macro": {
+      "mean": 0.42640000000000006,
+      "std": 0.0012124355652981952
+    },
+    "prefix_tail10": {
+      "mean": 0.182,
+      "std": 0.006557438524302007
+    },
+    "la_tail10": {
+      "mean": 0.12733333333333333,
+      "std": 0.032654759734735965
+    }
+  },
+  "held_reads": 60000,
+  "confirmatory": false
+}

@@ -1,0 +1,87 @@
+{
+  "status": "EXECUTED",
+  "kind": "TRR_AUDITED_HORIZON50_EXPLORATORY_SUMMARY",
+  "held_reads": 60000,
+  "prefix_summary": {
+    "arm": "stage_trr_then_la",
+    "n": 3,
+    "held_macro_mean": 0.46713333333333334,
+    "held_tail10_mean": 0.25666666666666665,
+    "held_accuracy_mean": 0.46713333333333334,
+    "wall_mean": 83.53548677762349,
+    "seeds": [
+      3407,
+      3408,
+      3409
+    ]
+  },
+  "la_summary": {
+    "arm": "logit_adjustment",
+    "n": 3,
+    "held_macro_mean": 0.4625333333333333,
+    "held_tail10_mean": 0.26,
+    "held_accuracy_mean": 0.4625333333333333,
+    "wall_mean": 83.7957357565562,
+    "seeds": [
+      3407,
+      3408,
+      3409
+    ]
+  },
+  "paired_rows": [
+    {
+      "seed": 3407,
+      "prefix_macro": 0.4648999999999999,
+      "la_macro": 0.46339999999999987,
+      "delta_macro": 0.0015000000000000568,
+      "prefix_tail10": 0.24100000000000002,
+      "la_tail10": 0.26799999999999996,
+      "delta_tail10": -0.02699999999999994
+    },
+    {
+      "seed": 3408,
+      "prefix_macro": 0.47159999999999996,
+      "la_macro": 0.4625,
+      "delta_macro": 0.009099999999999941,
+      "prefix_tail10": 0.275,
+      "la_tail10": 0.266,
+      "delta_tail10": 0.009000000000000008
+    },
+    {
+      "seed": 3409,
+      "prefix_macro": 0.4649000000000001,
+      "la_macro": 0.46169999999999994,
+      "delta_macro": 0.003200000000000147,
+      "prefix_tail10": 0.254,
+      "la_tail10": 0.246,
+      "delta_tail10": 0.008000000000000007
+    }
+  ],
+  "mean_std": {
+    "delta_macro": {
+      "mean": 0.0046000000000000485,
+      "std": 0.0039887341350357455
+    },
+    "delta_tail10": {
+      "mean": -0.0033333333333333084,
+      "std": 0.020502032419575676
+    },
+    "prefix_macro": {
+      "mean": 0.46713333333333334,
+      "std": 0.003868246803570467
+    },
+    "la_macro": {
+      "mean": 0.4625333333333333,
+      "std": 0.0008504900548114979
+    },
+    "prefix_tail10": {
+      "mean": 0.2566666666666667,
+      "std": 0.01715614564327703
+    },
+    "la_tail10": {
+      "mean": 0.26,
+      "std": 0.012165525060596432
+    }
+  },
+  "claims": "Exploratory horizon validation only; N was fixed before test reads and no held tuning performed."
+}

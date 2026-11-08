@@ -1,0 +1,4 @@
+{
+  "legacy": {"physical_forwards": 3, "cuda_seconds": 0.602},
+  "fused": {"physical_forwards": 1, "cuda_seconds": 0.157}
+}

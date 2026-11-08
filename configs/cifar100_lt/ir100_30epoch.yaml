@@ -1,0 +1,14 @@
+dataset: CIFAR100-LT
+imbalance_ratio: 100
+classes: 100
+epochs: 30
+batch_size: 128
+seeds: [3407, 3408, 3409]
+arms: [erm, ldam_drw, logit_adjustment, fixed_k, pv_mfaps]
+execution_variants: [fused, legacy]
+ldam_drw_switch_epoch: 15
+ldam_C: 0.5
+logit_adjustment_tau: 1.0
+action_grid: [0, 1]
+tail_fraction: 0.2
+held_policy: freeze_then_single_test_read

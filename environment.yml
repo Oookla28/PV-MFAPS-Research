@@ -1,0 +1,13 @@
+name: pv-mfaps-repro
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - pyyaml
+  - pip
+  - pip:
+      - -r requirements.txt

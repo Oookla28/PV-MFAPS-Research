@@ -1,0 +1,39 @@
+{
+  "status": "EXECUTED",
+  "kind": "TRR_AUDITED_PREFIX10_VS_LA_HELD_SUMMARY",
+  "held_reads": 60000,
+  "rows": [
+    {
+      "arm": "stage_trr_then_la",
+      "n": 3,
+      "held_macro_mean": 0.4440000000000001,
+      "held_tail10_mean": 0.18200000000000002,
+      "held_accuracy_mean": 0.444,
+      "wall_mean": 51.76700003941854,
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ]
+    },
+    {
+      "arm": "logit_adjustment",
+      "n": 3,
+      "held_macro_mean": 0.42640000000000006,
+      "held_tail10_mean": 0.12733333333333333,
+      "held_accuracy_mean": 0.42640000000000006,
+      "wall_mean": 51.37117870648702,
+      "seeds": [
+        3407,
+        3408,
+        3409
+      ]
+    }
+  ],
+  "comparison": {
+    "macro_delta": 0.01760000000000006,
+    "tail_delta": 0.0546666666666667,
+    "wall_delta": 0.39582133293151855
+  },
+  "scope": "Each group frozen before its single evaluator test read. Exploratory comparison across two frozen groups; no held tuning."
+}

@@ -1,0 +1,18 @@
+\\begin{table}[t]
+\\centering
+\\caption{Stage-aware readout refinement on long-tailed CIFAR benchmarks. Values are
+three-seed means from the frozen groups.}
+\\label{tab:stage-trr-main}
+\\begin{tabular}{lrrrr}
+\\toprule
+Dataset & Method & Macro-F1 & Tail-10\\% & $\\Delta$ Macro / Tail \\\\
+\\midrule
+CIFAR-100-LT, 30 ep & LA & 0.4264 & 0.1273 & -- \\\\
+CIFAR-100-LT, 30 ep & Stage-TRR-10 & 0.4440 & 0.1820 & +0.0176 / +0.0547 \\\\
+CIFAR-10-LT, 30 ep & LA & 0.7428 & 0.7400 & -- \\\\
+CIFAR-10-LT, 30 ep & Stage-TRR-10 & 0.7799 & 0.7797 & +0.0372 / +0.0397 \\\\
+CIFAR-100-LT, 50 ep & LA & 0.4625 & 0.2600 & -- \\\\
+CIFAR-100-LT, 50 ep & Stage-TRR-10 & 0.4671 & 0.2567 & +0.0046 / -0.0033 \\\\
+\\bottomrule
+\\end{tabular}
+\\end{table}
