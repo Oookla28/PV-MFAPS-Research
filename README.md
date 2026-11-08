@@ -82,25 +82,25 @@ CIFAR-10 和 CIFAR-100 使用公开官方数据。代码按 imbalance ratio 100 
 ### 3.1 SPD 谱映射
 
 令
-\[
+```math
 C=U\operatorname{diag}(\lambda_1,\ldots,\lambda_d)U^\top.
-\]
+```
 
 谱函数作用为
-\[
+```math
 \phi(C)
 =
 U\operatorname{diag}(\phi(\lambda_1),\ldots,\phi(\lambda_d))U^\top.
-\]
+```
 
 对称扰动 H 的 Frechet 导数为
-\[
+```math
 D\phi_C[H]
 =
 U\left(G_\phi(\lambda)\odot(U^\top H U)\right)U^\top,
-\]
+```
 其中
-\[
+```math
 (G_\phi)_{ij}
 =
 \begin{cases}
@@ -108,65 +108,65 @@ U\left(G_\phi(\lambda)\odot(U^\top H U)\right)U^\top,
 {\lambda_i-\lambda_j}, & i\ne j,\\
 \phi'(\lambda_i), & i=j.
 \end{cases}
-\]
+```
 
-前向特征依赖 \(\phi(\lambda)\)，反馈敏感性依赖 \(G_\phi\)。
+前向特征依赖 $\phi(\lambda)$，反馈敏感性依赖 $G_\phi$。
 
 ### 3.2 Feedback gap
 
-当前读出为 \(W_t\)，FIT 上的参考读出为 \(\widetilde W_t\)。定义
-\[
+当前读出为 $W_t$，FIT 上的参考读出为 $\widetilde W_t$。定义
+```math
 e_t
 =
 \nabla_\psi L(\psi_t,W_t)
 -
 \nabla_\psi L(\psi_t,\widetilde W_t),
-\]
+```
 以及
-\[
+```math
 \kappa_t
 =
 \frac{\lVert e_t\rVert}
 {\lVert\nabla_\psi L(\psi_t,\widetilde W_t)\rVert+\delta}.
-\]
+```
 
 这些量是 FIT 反馈诊断，不是总体泛化常数。
 
 ### 3.3 有限动作风险
 
 类别 c、分区 p、内层步数 k、reference mixing 系数 α 的风险代理为
-\[
+```math
 r_{c,p}(k,\alpha)
 =
 (1-\alpha)^2A_{c,p}^2\rho_{c,p}^{2k}
 +
 \alpha^2\frac{\sigma_{c,p}^2}{m q_c}.
-\]
+```
 
 A、ρ、σ、n 和 q 都从 FIT 校准得到。稳定性项和 empirical-Bernstein 项在风险包络代码中组合。
 
 ### 3.4 KL 分区鲁棒性
 
-两个配对分区的名义分布为 \(\bar u=(1/2,1/2)\)：
-\[
+两个配对分区的名义分布为 $\bar u=(1/2,1/2)$：
+```math
 \mathcal U_\varepsilon
 =
 \{u\in\Delta^2:
 \operatorname{KL}(u\|\bar u)\le\varepsilon\}.
-\]
+```
 
 动作 a 的鲁棒风险为
-\[
+```math
 \mathcal E_c(a)
 =
 \sup_{u\in\mathcal U_\varepsilon}
 \sum_{p=0}^1u_p\widehat R_{c,p}(a).
-\]
+```
 
 ### 3.5 离散 Pareto DP
 
-动作集合为 \(\mathcal A\)，离散成本为 \(\bar d_c(a)\)。DP 递推保存分区风险向量的 Pareto frontier：
-\[
+动作集合为 $\mathcal A$，离散成本为 $\bar d_c(a)$。DP 递推保存分区风险向量的 Pareto frontier：
+```math
 \mathcal P_j(b)
 =
 \operatorname{Pareto}
@@ -176,45 +176,45 @@ A、ρ、σ、n 和 q 都从 FIT 校准得到。稳定性项和 empirical-Bernst
 (r_0+R_{j,0}(a),r_1+R_{j,1}(a);\pi\cup\{a\})
 \right\}
 \right).
-\]
+```
 
 该结论只保证给定风险表、动作网格和量化成本下的离散最优性。
 
 ### 3.6 Stage-TRR-N
 
 前 N 个 epoch 使用
-\[
+```math
 W_t^{(1)}
 =
 W_t-\eta_h\nabla_W L_{\mathrm{LA}}(\psi_t,W_t),
-\]
+```
 并以 detached refined readout 更新 encoder：
-\[
+```math
 \psi_{t+1}
 =
 \psi_t-
 \eta_\psi
 \nabla_\psi
 L_{\mathrm{LA}}(\psi_t,\operatorname{stopgrad}(W_t^{(1)})).
-\]
+```
 
 第 N 个 epoch 之后恢复联合 Logit Adjustment：
-\[
+```math
 (\psi_{t+1},W_{t+1})
 =
 (\psi_t,W_t)
 -
 \eta_t\nabla_{\psi,W}L_{\mathrm{LA}}(\psi_t,W_t).
-\]
+```
 
 阶段策略的条件性估计界为
-\[
+```math
 J(\widehat{k}_{1:T})-J(k^*_{1:T})
 \le
 2\sum_{t,c}\omega_c\epsilon_{t,c}
 +
 \epsilon_{\mathrm{quant}}.
-\]
+```
 
 ## 4. 模块地图
 
@@ -347,7 +347,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 标准矩阵使用 ResNet-32（16/32/64 channels，每个 stage 五个 block）、zero-padding crop、SGD、5 epoch warmup 和 160/180 epoch 学习率衰减。IR=100 的训练集包含 10,899 张图，计数从 500 递减到 5。命令、参数合同和 Stage-TRR-10 的同 horizon 入口集中在 [`configs/cifar100_lt/ir100_200epoch.yaml`](configs/cifar100_lt/ir100_200epoch.yaml) 与 [`docs/cifar100_lt_protocol.md`](docs/cifar100_lt_protocol.md)。
 
-矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment、LDAM-DRW 和 Stage-TRR-10。Balanced Softmax 与 \(\tau=1\) 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
+矩阵包含 ERM、Balanced Softmax、train-time Logit Adjustment、LDAM-DRW 和 Stage-TRR-10。Balanced Softmax 与 $\tau=1$ 的 Logit Adjustment 在该实现中只相差一个类别无关常数，因此作为两个读者侧名称保留，结果解读时不把它们当作两次独立的算法增益。训练阶段只读 FIT，全部 checkpoint 写入后再由 evaluation 入口一次性读取官方 test split。
 
 标准矩阵的读者侧摘要见 [`artifacts/results/cifar100_ir100_200_v2_summary.json`](artifacts/results/cifar100_ir100_200_v2_summary.json)。Stage-TRR-10 与同合同 LA 控制的三 seed 平均 Macro-F1 为 0.4221 ± 0.0064 vs 0.4110 ± 0.0036，Tail-10% F1 为 0.2389 ± 0.0110 vs 0.2190 ± 0.0147。三个 seed 的配对差值均为正。摘要同时记录训练集、测试集和源代码快照哈希，旧版 raw-logit LDAM 行被隔离。该结果用于说明阶段反馈干预在本训练合同下的表现，不能替代跨实现、跨预算的社区排行榜比较。
 
@@ -382,9 +382,9 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 | 指标 | 来源实验 | 数值 | 口径 |
 |---|---|---:|---|
-| Fused/Legacy 一步等价性 | corrected CIFAR one-step smoke | state max delta \(4.47\times10^{-8}\) | loss/action semantics matched, `held_reads=0` |
+| Fused/Legacy 一步等价性 | corrected CIFAR one-step smoke | state max delta $4.47\times10^{-8}$ | loss/action semantics matched, `held_reads=0` |
 | 物理 encoder forward | CIFAR-100-LT 30 epoch，seed 3407 | 2,580 vs 54,180 | Fused vs Legacy，同一动作序列 |
-| FLOPs | CIFAR-100-LT 30 epoch，seed 3407 | \(8.72\times10^{10}\) vs \(1.83\times10^{12}\) | Fused / Legacy，约 0.048x |
+| FLOPs | CIFAR-100-LT 30 epoch，seed 3407 | $8.72\times10^{10}$ vs $1.83\times10^{12}$ | Fused / Legacy，约 0.048x |
 | wall-clock | CIFAR-100-LT 30 epoch，seed 3407 | 73.175 s vs 316.376 s | 同 GPU 顺序计时，约 4.32x 加速 |
 
 系统数字描述的是执行图与物理代价。它们与动态干预的精度指标分开使用。
@@ -397,7 +397,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 - CIFAR-10-LT 30 epoch：Stage-TRR-10 Macro 0.7799，Tail-10% 0.7797；LA Macro 0.7428，Tail-10% 0.7400。
 - CIFAR-100-LT 50 epoch：Macro 差值 +0.46pp，Tail-10% 差值 -0.33pp。
 - PlantSPD PR-PV-MFAPS：Macro 0.4841，Tail-10% 0.2976。
-- Fused real-checkpoint equivalence：physical encoder forward 3→1，最大状态误差约 \(5.77\times10^{-6}\)。
+- Fused real-checkpoint equivalence：physical encoder forward 3→1，最大状态误差约 $5.77\times10^{-6}$。
 
 这些摘要用于复现核对。原始数据、checkpoint 和大规模 encoder state 需要自行准备。
 
@@ -405,7 +405,7 @@ python experiments/cifar100_lt/trr_audited_evaluate.py --run-dir "$OUTPUT_ROOT/s
 
 - 公开脚本把训练和 evaluation split 分开。训练 JSON 的 `held_reads` 保持为 0，所有 checkpoint 写入后才调用 evaluator。
 - 30/50 epoch 的历史结果使用项目早期的宽浅 CIFAR 模型，200 epoch 矩阵使用 ResNet-32。两套配置分别复现，不把它们混成同一张标准表。
-- Balanced Softmax 与 train-time Logit Adjustment 在 \(\tau=1\) 时是同一个 prior-aware objective 的不同写法，因此结果阅读时保留名称但不重复计算算法增益。
+- Balanced Softmax 与 train-time Logit Adjustment 在 $\tau=1$ 时是同一个 prior-aware objective 的不同写法，因此结果阅读时保留名称但不重复计算算法增益。
 - PaCo、RIDE、MiSLAS 等需要额外对比学习分支、专家路由或两阶段校准的重型方法没有在轻量 runner 中用简化版本替代。需要比较时应接入其完整官方实现和对应训练预算。
 - Fused/Legacy 是执行图消融。算法指标、物理 encoder forwards、FLOPs 和 wall-clock 分列记录。
 
