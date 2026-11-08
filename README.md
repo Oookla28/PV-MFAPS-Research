@@ -389,5 +389,6 @@ CIFAR-100-LT 50 epoch：
 9. `docs/ftrr_derivation_20261108.md`
 10. `docs/trr_stage10_registration_20261108.md`
 11. `docs/trr_stage10_claims_evidence_audit_20261108.md`
+12. `docs/research_process_review_20261108.md`
 
 引用 PlantSeg 时请使用 DOI。引用 CIFAR 时请说明官方 CIFAR repository 与长尾构造规则。涉及 Balanced Softmax、Logit Adjustment、LDAM-DRW 和 SPD 几何的背景说明，应在论文或扩展文档中给出对应原始文献，而不是把仓库内的实现当作文献来源。
