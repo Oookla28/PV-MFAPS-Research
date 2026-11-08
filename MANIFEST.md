@@ -15,6 +15,7 @@ This repository is the reader-facing minimum reproducible unit.
 ## Excluded
 
 - Research-process journals and internal audit logs.
+- LaTeX drafts and evidence maps.
 - GPU orchestration scripts and private shell wrappers.
 - Raw images, checkpoints, encoder states, server paths, SSH information, and
   credentials.
