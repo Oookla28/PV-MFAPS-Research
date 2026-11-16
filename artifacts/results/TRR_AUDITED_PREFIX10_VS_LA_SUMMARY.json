@@ -46,10 +46,6 @@
       3408,
       3409
     ],
-    "held_policy": "freeze_then_single_test_read",
-    "metrics": [
-      "macro_recall",
-      "tail10_recall"
-    ]
+    "held_policy": "freeze_then_single_test_read"
   }
 }
