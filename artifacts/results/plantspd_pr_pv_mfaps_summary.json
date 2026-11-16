@@ -18,7 +18,15 @@
     "fit_samples": 4184,
     "held_samples": 1046,
     "frozen_artifacts": 24,
-    "held_reads_semantics": "24 frozen artifacts x 1,046 HELD samples; metric n=6 aggregates partition-seed rows"
+    "held_reads_semantics": "24 frozen artifacts x 1,046 HELD samples; metric n=6 aggregates partition-seed rows",
+    "action_grid": [
+      0,
+      1,
+      2,
+      4
+    ],
+    "allocation": "finite-action class/partition allocation with measured quantized costs",
+    "paired_partition_counts_identical": true
   },
   "matched_results": {
     "pr_pv_mfaps": {
