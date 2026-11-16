@@ -15,6 +15,15 @@ Included figures:
 - stage_trr_paired_seed_deltas.pdf
 - fused_system_equivalence.pdf (the real-checkpoint one-step equivalence view: 3 to 1 physical encoder passes)
 
+The data-driven paper figures are generated reproducibly by
+`generated/gen_public_evidence_figures.py`:
+
+- `generated/fig_plantspd_matched.pdf`
+- `generated/fig_cross_dataset_stage_trr.pdf`
+- `generated/fig_cifar100_long_matrix.pdf`
+- `generated/fig_fused_system_cost.pdf`
+- `generated/fig_solver_exactness_scale.pdf`
+
 The fused-system PDF is the one-step execution-graph illustration. The numeric
 30-epoch sequential timing and FLOPs comparison is kept in
 `artifacts/results/fused_execution_summary.json`, so the figure and the
