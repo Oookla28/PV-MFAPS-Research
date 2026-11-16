@@ -35,5 +35,17 @@
     "tail_delta": 0.0546666666666667,
     "wall_delta": 0.39582133293151855
   },
-  "scope": "Each group frozen before its single evaluator test read. Exploratory comparison across two frozen groups; no held tuning."
+  "scope": "Each group frozen before its single evaluator test read. Exploratory comparison across two frozen groups; no held tuning.",
+  "protocol": {
+    "dataset": "CIFAR100-LT",
+    "imbalance_ratio": 100,
+    "epochs": 30,
+    "prefix_epochs": 10,
+    "seeds": [
+      3407,
+      3408,
+      3409
+    ],
+    "held_policy": "freeze_then_single_test_read"
+  }
 }

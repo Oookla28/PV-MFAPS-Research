@@ -58,5 +58,17 @@
       "std": 0.043301270189221974
     }
   },
-  "claims": "Cross-domain exploratory comparison; no SOTA/generalization claim."
+  "claims": "Cross-domain exploratory comparison; no SOTA/generalization claim.",
+  "protocol": {
+    "dataset": "CIFAR10-LT",
+    "imbalance_ratio": 100,
+    "epochs": 30,
+    "prefix_epochs": 10,
+    "seeds": [
+      3407,
+      3408,
+      3409
+    ],
+    "held_policy": "freeze_then_single_test_read"
+  }
 }
