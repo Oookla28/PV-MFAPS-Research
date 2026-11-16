@@ -83,17 +83,5 @@
       "std": 0.012165525060596432
     }
   },
-  "claims": "Exploratory horizon validation only; N was fixed before test reads and no held tuning performed.",
-  "protocol": {
-    "dataset": "CIFAR100-LT",
-    "imbalance_ratio": 100,
-    "epochs": 50,
-    "prefix_epochs": 10,
-    "seeds": [
-      3407,
-      3408,
-      3409
-    ],
-    "held_policy": "freeze_then_single_test_read"
-  }
+  "claims": "Exploratory horizon validation only; N was fixed before test reads and no held tuning performed."
 }
